@@ -1,0 +1,9 @@
+cldr/common/
+cldr/LICENSE
+cldr/README-common.md
+ucd/*
+!ucd/CMakeLists.txt
+!ucd/ucd.tar.xz
+uts39/*
+!uts39/uts39.tar.xz
+!uts39/CMakeLists.txt

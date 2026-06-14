@@ -1,0 +1,4 @@
+tools/bin/nls-data-gen filter=lfs diff=lfs merge=lfs -text
+data/cldr/cldr-48.2.tar.xz filter=lfs diff=lfs merge=lfs -text
+data/ucd/ucd.tar.xz filter=lfs diff=lfs merge=lfs -text
+data/uts39/uts39.tar.xz filter=lfs diff=lfs merge=lfs -text
