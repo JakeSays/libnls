@@ -2,7 +2,7 @@ using System.Text;
 using NlsDataGenerator.Collation;
 using NlsDataGenerator.Normalization;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Smoke test for CollationRuleParser: parses representative rule strings with a recording sink and
 // checks the reset/relation callbacks. There is no standalone ICU oracle for the parser (ICU's parser

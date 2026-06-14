@@ -1,59 +1,53 @@
+using System.Globalization;
 using NlsDataGenerator.IcuFormat;
 
 namespace NlsDataGenerator.Locale;
 
-// Emits the LCID <-> locale-name table backing LocaleNameToLCID / LCIDToLocaleName /
-// IsValidLocale / GetLocaleInfo. The LCID is a Windows concept ICU has no equivalent for, so this
-// is a fixed libnls-internal table, not ICU data.
+// Emits the LCID <-> locale-name table backing LocaleNameToLCID / LCIDToLocaleName / IsValidLocale /
+// GetLocaleInfo, from data/lcidmap.txt (one "locale-name:0xLCID" line per locale, scraped from the
+// Microsoft [MS-LCID] reference and scoped to the locales we ship). LCID is a Windows concept with no
+// CLDR/ICU data equivalent, so the mapping lives in that text file rather than being derived here.
 //
-// Format: ASCII magic "LCID", a uint32 version, a uint32 entry count, then per entry a uint32
-// LCID, a uint8 name byte-length, and that many ASCII name bytes. The invariant locale is LCID
-// 0x007F with an empty name.
-internal sealed class LcidTableGenerator
+// Format: ASCII magic "LCID", a uint32 version, a uint32 entry count, then per entry a uint32 LCID, a
+// uint8 name byte-length, and that many ASCII name bytes. The invariant locale (LCID 0x007F, empty
+// name) is always emitted first; some LCIDs map to more than one name (shared territories), in which
+// case a reverse LCID->name lookup should take the first matching entry.
+internal static class LcidTableGenerator
 {
     private const uint FormatVersion = 1;
+    private const uint InvariantLcid = 0x007F;
 
-    private static readonly (uint Lcid, string Name)[] Entries =
+    public static void Write(string lcidMapPath, string outputDirectory)
     {
-        (0x007F, ""),
-        (0x0409, "en-US"),
-        (0x0809, "en-GB"),
-        (0x0407, "de-DE"),
-        (0x0807, "de-CH"),
-        (0x040C, "fr-FR"),
-        (0x0C0C, "fr-CA"),
-        (0x0410, "it-IT"),
-        (0x0C0A, "es-ES"),
-        (0x0416, "pt-BR"),
-        (0x0816, "pt-PT"),
-        (0x0413, "nl-NL"),
-        (0x041D, "sv-SE"),
-        (0x0406, "da-DK"),
-        (0x0414, "nb-NO"),
-        (0x040B, "fi-FI"),
-        (0x0419, "ru-RU"),
-        (0x0415, "pl-PL"),
-        (0x0405, "cs-CZ"),
-        (0x040E, "hu-HU"),
-        (0x0408, "el-GR"),
-        (0x041F, "tr-TR"),
-        (0x0411, "ja-JP"),
-        (0x0412, "ko-KR"),
-        (0x0804, "zh-CN"),
-        (0x0404, "zh-TW"),
-        (0x0401, "ar-SA"),
-        (0x040D, "he-IL"),
-        (0x041E, "th-TH"),
-        (0x042A, "vi-VN"),
-    };
+        var entries = new List<(uint Lcid, string Name)> { (InvariantLcid, "") };
+        foreach (var rawLine in File.ReadAllLines(lcidMapPath))
+        {
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line[0] == '#')
+            {
+                continue;
+            }
+            // "locale-name:0xLCID" — split on the first colon (locale names never contain one).
+            var colon = line.IndexOf(':');
+            if (colon < 0)
+            {
+                throw new InvalidOperationException($"malformed lcidmap line: {rawLine}");
+            }
+            var name = line[..colon];
+            var lcidText = line[(colon + 1)..].Trim();
+            if (!lcidText.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                || !uint.TryParse(lcidText.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var lcid))
+            {
+                throw new InvalidOperationException($"malformed LCID in lcidmap line: {rawLine}");
+            }
+            entries.Add((lcid, name));
+        }
 
-    public void Write(string outputDirectory)
-    {
         var writer = new LittleEndianWriter();
         writer.WriteAsciiString("LCID");
         writer.WriteUInt32(FormatVersion);
-        writer.WriteUInt32((uint)Entries.Length);
-        foreach (var entry in Entries)
+        writer.WriteUInt32((uint)entries.Count);
+        foreach (var entry in entries)
         {
             writer.WriteUInt32(entry.Lcid);
             writer.WriteByte((byte)entry.Name.Length);
@@ -62,6 +56,6 @@ internal sealed class LcidTableGenerator
 
         var path = Path.Combine(outputDirectory, "lcid-locales.nlsdata");
         File.WriteAllBytes(path, writer.ToArray());
-        Console.WriteLine($"wrote {path} ({writer.Length} bytes, {Entries.Length} locales)");
+        Console.WriteLine($"wrote {path} ({writer.Length} bytes, {entries.Count} locales)");
     }
 }

@@ -16,6 +16,14 @@ internal sealed class LittleEndianWriter
         _buffer[_length++] = value;
     }
 
+    // Writes the ICU data-header magic bytes (magic1=0xda, magic2=0x27) that every ICU data item
+    // and .dat package header carries at offset 2-3, immediately after the uint16 headerSize.
+    public void WriteMagic()
+    {
+        WriteByte(0xDA);
+        WriteByte(0x27);
+    }
+
     public void WriteUInt16(ushort value)
     {
         EnsureCapacity(2);
@@ -133,6 +141,17 @@ internal sealed class LittleEndianWriter
         if (remainder != 0)
         {
             WritePadding(alignment - remainder);
+        }
+    }
+
+    // Pads with 0xaa filler until the length is a multiple of alignment, matching ICU's
+    // udata_writePadding for the gaps between items in a .dat package.
+    public void AlignToFiller(int alignment)
+    {
+        var remainder = _length % alignment;
+        if (remainder != 0)
+        {
+            WriteFiller(alignment - remainder);
         }
     }
 

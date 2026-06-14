@@ -1,11 +1,11 @@
 using NlsDataGenerator.IcuFormat;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
-// Dev self-test for the UCPTrie serializer: builds a trie with a known value map, writes the
-// serialized bytes, and prints each probe code point's expected value so the C++ ucptrie-oracle's
-// ICU readback can be diffed against it.
-internal static class UcpTrieSelfTest
+// Dev self-test for the UTrie2 serializer: builds a trie with a known value map, writes the
+// serialized bytes, and prints each probe code point's expected value in the oracle's exact
+// format ("%04X=value") so the C++ oracle's ICU readback can be diffed against it.
+internal static class TrieSelfTest
 {
     private static readonly (int CodePoint, uint Value)[] Probes =
     {
@@ -25,14 +25,14 @@ internal static class UcpTrieSelfTest
 
     public static int Run(string outputPath)
     {
-        var builder = new CodePointTrieBuilder(0, 0xFFFF);
+        var builder = new Trie2Builder(0, 0xFFFF);
         builder.Set(0x41, 100);
         builder.Set(0x61, 200);
-        builder.SetRange(0x100, 0x17F, 300);
+        builder.SetRange(0x100, 0x17F, 300, true);
         builder.Set(0x4E00, 400);
-        builder.SetRange(0x1F600, 0x1F64F, 500);
+        builder.SetRange(0x1F600, 0x1F64F, 500, true);
 
-        var bytes = builder.Build();
+        var bytes = builder.Freeze(Trie2ValueBits.Bits16);
         File.WriteAllBytes(outputPath, bytes);
 
         foreach (var probe in Probes)

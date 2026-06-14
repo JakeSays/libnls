@@ -1,4 +1,4 @@
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Diffs two raw %%CollationBin blobs at the CE64 level. Reads the CES section of each (between the
 // IX_CES_OFFSET and IX_RESERVED10_OFFSET index entries) and lists the 64-bit CEs unique to each

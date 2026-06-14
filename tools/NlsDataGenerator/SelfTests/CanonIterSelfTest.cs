@@ -1,7 +1,7 @@
 using System.Text;
 using NlsDataGenerator.Normalization;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Validates CanonicalClosureData and CanonicalIterator against ICU. Per "interesting" code point it
 // dumps the canonical start set (sorted) and whether the code point is a canonical segment starter;

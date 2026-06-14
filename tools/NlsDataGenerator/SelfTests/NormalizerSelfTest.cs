@@ -1,7 +1,7 @@
 using System.Text;
 using NlsDataGenerator.Normalization;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Validates BuildTimeNormalizer against ICU. It builds the normalization data from the UCD, then
 // dumps every "interesting" code point's normalization properties (combining class, decompose-inert,

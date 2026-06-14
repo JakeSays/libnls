@@ -2,7 +2,7 @@ using NlsDataGenerator.Collation;
 using NlsDataGenerator.Normalization;
 using NlsDataGenerator.Parsing;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // End-to-end test of the full coll/<locale>.res path: read the CLDR collation XML (folding the
 // extractor), build each collation type's %%CollationBin against the in-memory root, assemble the

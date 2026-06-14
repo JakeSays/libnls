@@ -3,7 +3,7 @@ using NlsDataGenerator.Normalization;
 using NlsDataGenerator.Parsing;
 using NlsDataGenerator.ResourceBundle;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // End-to-end test of the collation tailoring builder: builds the de phonebook %%CollationBin from its
 // rules and diffs it against the blob genrb embedded in de.res. This exercises the whole chain — root

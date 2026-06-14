@@ -13,14 +13,18 @@ internal sealed class CommandLineOptions
     // It is stamped into each collation's Version string and folded into the tailoring data version.
     public string CldrVersion { get; }
 
+    // Path to data/lcidmap.txt (the "locale-name:0xLCID" table backing the LCID APIs).
+    public string LcidMapPath { get; }
+
     public IReadOnlyList<string> Locales { get; }
 
-    private CommandLineOptions(string cldrDirectory, string ucdDirectory, string outputDirectory, string cldrVersion, IReadOnlyList<string> locales)
+    private CommandLineOptions(string cldrDirectory, string ucdDirectory, string outputDirectory, string cldrVersion, string lcidMapPath, IReadOnlyList<string> locales)
     {
         CldrDirectory = cldrDirectory;
         UcdDirectory = ucdDirectory;
         OutputDirectory = outputDirectory;
         CldrVersion = cldrVersion;
+        LcidMapPath = lcidMapPath;
         Locales = locales;
     }
 
@@ -31,6 +35,7 @@ internal sealed class CommandLineOptions
         string? ucd = null;
         string? output = null;
         string? cldrVersion = null;
+        string? lcidMap = null;
         var locales = new List<string>();
 
         for (var i = 0; i < args.Length; i++)
@@ -71,6 +76,14 @@ internal sealed class CommandLineOptions
                     cldrVersion = args[++i];
                     break;
 
+                case "--lcidmap":
+                    if (!hasValue)
+                    {
+                        return null;
+                    }
+                    lcidMap = args[++i];
+                    break;
+
                 case "--locales":
                     if (!hasValue)
                     {
@@ -88,16 +101,16 @@ internal sealed class CommandLineOptions
             }
         }
 
-        if (cldr is null || ucd is null || output is null || cldrVersion is null)
+        if (cldr is null || ucd is null || output is null || cldrVersion is null || lcidMap is null)
         {
             return null;
         }
 
-        return new CommandLineOptions(cldr, ucd, output, cldrVersion, locales);
+        return new CommandLineOptions(cldr, ucd, output, cldrVersion, lcidMap, locales);
     }
 
     public static void PrintUsage()
     {
-        Console.Error.WriteLine("usage: nls-data-gen --cldr <dir> --ucd <dir> --out <dir> --cldr-version <ver> [--locales de,sv,ja]");
+        Console.Error.WriteLine("usage: nls-data-gen --cldr <dir> --ucd <dir> --out <dir> --cldr-version <ver> --lcidmap <file> [--locales de,sv,ja]");
     }
 }

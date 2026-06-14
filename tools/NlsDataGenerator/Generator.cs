@@ -1,6 +1,7 @@
 using NlsDataGenerator.Case;
 using NlsDataGenerator.Codepage;
 using NlsDataGenerator.Collation;
+using NlsDataGenerator.IcuFormat;
 using NlsDataGenerator.Locale;
 using NlsDataGenerator.Normalization;
 using NlsDataGenerator.Parsing;
@@ -22,14 +23,20 @@ internal sealed class Generator
     {
         Directory.CreateDirectory(_options.OutputDirectory);
 
+        // The ICU-format items are also packaged into the cldr-<version>.dat common-data file (the
+        // tool's final deliverable); each is collected here and the package is written last.
+        var packageName = IcuDataPackageWriter.PackageNameForCldrVersion(_options.CldrVersion);
+        var package = new IcuDataPackageWriter(packageName);
+
         // Self-contained fixed tables.
-        new Windows1252Generator().Write(_options.OutputDirectory);
-        new LcidTableGenerator().Write(_options.OutputDirectory);
+        Windows1252Generator.Write(_options.OutputDirectory);
+        LcidTableGenerator.Write(_options.LcidMapPath, _options.OutputDirectory);
 
         // Case mapping (ucase.icu) from the UCD.
         var caseData = new CaseGenerator(new CaseInputs(_options.UcdDirectory)).Generate();
         var casePath = Path.Combine(_options.OutputDirectory, "ucase.icu");
         File.WriteAllBytes(casePath, caseData);
+        package.Add("ucase.icu", caseData);
         Console.WriteLine($"wrote {casePath} ({caseData.Length} bytes)");
 
         // Normalization (nfc.nrm) from the UCD.
@@ -38,6 +45,7 @@ internal sealed class Generator
         var normalizationData = normalizationBuilder.Generate();
         var nfcPath = Path.Combine(_options.OutputDirectory, "nfc.nrm");
         File.WriteAllBytes(nfcPath, normalizationData);
+        package.Add("nfc.nrm", normalizationData);
         Console.WriteLine($"wrote {nfcPath} ({normalizationData.Length} bytes)");
 
         // Collation root (ucadata.icu) from CLDR FractionalUCA.txt + the vendored uscript.h.
@@ -54,6 +62,7 @@ internal sealed class Generator
             HanOrderKind.RadicalStroke);
         var ucadataPath = Path.Combine(_options.OutputDirectory, "ucadata.icu");
         File.WriteAllBytes(ucadataPath, rootData);
+        package.Add("ucadata.icu", rootData);
         Console.WriteLine($"wrote {ucadataPath} ({rootData.Length} bytes)");
 
         // Collation tailorings (coll/*.res) from the CLDR collation XML. Guard against a stale version
@@ -105,8 +114,17 @@ internal sealed class Generator
             }
             var resourcePath = Path.Combine(collationOutput, locale + ".res");
             File.WriteAllBytes(resourcePath, resourceBytes);
+            package.Add("coll/" + locale + ".res", resourceBytes);
             Console.WriteLine($"wrote {resourcePath} ({resourceBytes.Length} bytes)");
         }
+
+        // Final deliverable: the ICU common-data package. The custom cp1252.nlsdata /
+        // lcid-locales.nlsdata tables are not ICU DataHeader items, so they stay as sidecar
+        // files rather than going into the package.
+        var packageBytes = package.Build();
+        var packagePath = Path.Combine(_options.OutputDirectory, packageName + ".dat");
+        File.WriteAllBytes(packagePath, packageBytes);
+        Console.WriteLine($"wrote {packagePath} ({packageBytes.Length} bytes, {package.Count} items)");
         return 0;
     }
 }

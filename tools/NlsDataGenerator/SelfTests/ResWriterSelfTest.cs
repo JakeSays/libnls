@@ -1,6 +1,6 @@
 using NlsDataGenerator.ResourceBundle;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Validates ResourceBundleWriter against a genrb-built reference. It reads de.res, pulls out the two
 // genrb-built %%CollationBin blobs plus the Sequence/Version strings, rebuilds the same tree in

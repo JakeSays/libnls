@@ -1,6 +1,6 @@
 using NlsDataGenerator.ResourceBundle;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Dumps each collation type's %%CollationBin index table from a .res, for diagnosing size differences
 // (e.g. the contexts section length that overflows the context index for ja).

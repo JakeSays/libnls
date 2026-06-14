@@ -142,8 +142,7 @@ internal static class CollationDataWriter
     private static void WriteUColHeader(LittleEndianWriter writer, int headerSize, byte[] version)
     {
         writer.WriteUInt16((ushort)headerSize);
-        writer.WriteByte(0xDA);
-        writer.WriteByte(0x27);
+        writer.WriteMagic();
         writer.WriteUInt16(20);
         writer.WriteUInt16(0);
         writer.WriteByte(0);

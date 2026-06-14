@@ -1,6 +1,6 @@
 using NlsDataGenerator.ResourceBundle;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Dumps the root-table string values of an arbitrary .res (e.g. icuver.res), to read version metadata
 // such as the CLDRVersion an ICU .dat package was built from.

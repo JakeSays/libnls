@@ -1,6 +1,6 @@
 using NlsDataGenerator.Collation;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Runs CollationWeights over a list of cases and prints the allocated weight sequence in the same
 // format as the C++ weights oracle, so the two can be diffed. Each input line is

@@ -1,6 +1,6 @@
 using NlsDataGenerator.IcuFormat;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Dev self-test for the UCharsTrie builder: builds a trie from a fixed set of (string, value) pairs
 // chosen to exercise every serialization path — final values vs. node values in 1/2/3-unit forms,

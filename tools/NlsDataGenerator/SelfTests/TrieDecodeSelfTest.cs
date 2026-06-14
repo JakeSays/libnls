@@ -2,7 +2,7 @@ using NlsDataGenerator.Collation;
 using NlsDataGenerator.IcuFormat;
 using NlsDataGenerator.ResourceBundle;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Decodes a collation type's %%CollationBin trie from a .res and tallies the CE32 tag each code point
 // maps to across the CJK ranges, to see exactly how the reference encodes tailored Han (OFFSET_TAG

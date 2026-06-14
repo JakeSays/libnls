@@ -3,7 +3,7 @@ using NlsDataGenerator.Normalization;
 using NlsDataGenerator.Parsing;
 using NlsDataGenerator.ResourceBundle;
 
-namespace NlsDataGenerator;
+namespace NlsDataGenerator.SelfTests;
 
 // Validates the whole collation locale set: builds each coll/<locale>.res from CLDR (folding the
 // extractor) and diffs every %%CollationBin blob against the reference little-endian .res extracted

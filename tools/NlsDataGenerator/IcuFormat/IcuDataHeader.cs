@@ -16,8 +16,6 @@ internal readonly struct IcuDataHeader
     private const int HeaderSize = 32;
     private const int UDataInfoSize = 20;
     private const int MappedDataSize = 4;
-    private const byte Magic1 = 0xDA;
-    private const byte Magic2 = 0x27;
 
     private readonly string _dataFormat;
     private readonly byte[] _formatVersion;
@@ -50,8 +48,7 @@ internal readonly struct IcuDataHeader
     {
         // MappedData.
         writer.WriteUInt16(HeaderSize);
-        writer.WriteByte(Magic1);
-        writer.WriteByte(Magic2);
+        writer.WriteMagic();
 
         // UDataInfo.
         writer.WriteUInt16(UDataInfoSize);
