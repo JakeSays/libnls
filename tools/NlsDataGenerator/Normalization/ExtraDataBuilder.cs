@@ -134,8 +134,7 @@ internal sealed class ExtraDataBuilder
             if (rmLength > Norm16Constants.MappingLengthMask)
             {
                 throw new InvalidOperationException(
-                    $"raw mapping for U+{c:X4} longer than maximum of "
-                    + $"{Norm16Constants.MappingLengthMask}");
+                    $"raw mapping for U+{c:X4} longer than maximum of {Norm16Constants.MappingLengthMask}");
             }
             var rm0 = rm[0];
             if (rmLength == length - 1

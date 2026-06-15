@@ -20,7 +20,6 @@ set(ICU_COMMON_SOURCES
     common/bytestrie.cpp
     common/bytestrieiterator.cpp
     common/caniter.cpp
-    common/characterproperties.cpp
     common/chariter.cpp
     common/charstr.cpp
     common/cmemory.cpp
@@ -31,7 +30,6 @@ set(ICU_COMMON_SOURCES
     common/dictionarydata.cpp
     common/dtintrv.cpp
     common/edits.cpp
-    common/emojiprops.cpp
     common/errorcode.cpp
     common/filteredbrk.cpp
     common/filterednormalizer2.cpp
@@ -63,7 +61,6 @@ set(ICU_COMMON_SOURCES
     common/parsepos.cpp
     common/patternprops.cpp
     common/pluralmap.cpp
-    common/propname.cpp
     common/propsvec.cpp
     common/punycode.cpp
     common/putil.cpp
@@ -97,7 +94,6 @@ set(ICU_COMMON_SOURCES
     common/uarrsort.cpp
     common/ubidi.cpp
     common/ubidiln.cpp
-    common/ubidi_props.cpp
     common/ubiditransform.cpp
     common/ubidiwrt.cpp
     common/ubrk.cpp
@@ -105,7 +101,6 @@ set(ICU_COMMON_SOURCES
     common/ucasemap.cpp
     common/ucasemap_titlecase_brkiter.cpp
     common/ucat.cpp
-    common/uchar.cpp
     common/ucharstriebuilder.cpp
     common/ucharstrie.cpp
     common/ucharstrieiterator.cpp
@@ -162,9 +157,7 @@ set(ICU_COMMON_SOURCES
     common/unifiedcache.cpp
     common/unifilt.cpp
     common/unifunct.cpp
-    common/uniset_closure.cpp
     common/uniset.cpp
-    common/uniset_props.cpp
     common/unisetspan.cpp
     common/unistr_case.cpp
     common/unistr_case_locale.cpp
@@ -175,13 +168,11 @@ set(ICU_COMMON_SOURCES
     common/unormcmp.cpp
     common/unorm.cpp
     common/uobject.cpp
-    common/uprops.cpp
     common/uresbund.cpp
     common/ures_cnv.cpp
     common/uresdata.cpp
     common/usc_impl.cpp
     common/uscript.cpp
-    common/uscript_props.cpp
     common/uset.cpp
     common/usetiter.cpp
     common/uset_props.cpp
@@ -220,24 +211,18 @@ set(ICU_I18N_COLLATION_SOURCES
     i18n/coleitr.cpp
     i18n/coll.cpp
     i18n/collation.cpp
-    i18n/collationbuilder.cpp
     i18n/collationcompare.cpp
     i18n/collationdata.cpp
-    i18n/collationdatabuilder.cpp
     i18n/collationdatareader.cpp
-    i18n/collationdatawriter.cpp
     i18n/collationfastlatin.cpp
-    i18n/collationfastlatinbuilder.cpp
     i18n/collationfcd.cpp
     i18n/collationiterator.cpp
     i18n/collationkeys.cpp
     i18n/collationroot.cpp
     i18n/collationrootelements.cpp
-    i18n/collationruleparser.cpp
     i18n/collationsets.cpp
     i18n/collationsettings.cpp
     i18n/collationtailoring.cpp
-    i18n/collationweights.cpp
     i18n/rulebasedcollator.cpp
     i18n/sortkey.cpp
     i18n/ucln_in.cpp
@@ -457,7 +442,6 @@ set(ICU_COMMON_HEADERS
     common/unicode/unorm2.h
     common/unicode/unorm.h
     common/unicode/uobject.h
-    common/unicode/urename.h
     common/unicode/urep.h
     common/unicode/ures.h
     common/unicode/uscript.h
@@ -536,6 +520,11 @@ target_compile_definitions(icu
         U_I18N_IMPLEMENTATION
     PUBLIC
         U_STATIC_IMPLEMENTATION
+        # We vendor exactly one ICU and never coexist with a system libicu, so the per-version
+        # symbol renaming (urename.h -> ucol_open_78 etc.) buys nothing and couples symbol names
+        # to the ICU code version. Disable it so the real names (ucol_open, u_strToUpper) are used.
+        # PUBLIC: headers and impl must agree, or the renamed/unrenamed names mismatch at link.
+        U_DISABLE_RENAMING=1
         # --- the UCONFIG subsetting switches (see the design doc) ---
         UCONFIG_NO_BREAK_ITERATION=1
         UCONFIG_NO_FILTERED_BREAK_ITERATION=1

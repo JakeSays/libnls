@@ -1,0 +1,23 @@
+# Linker version script for libnls.so. The vendored ICU is a private
+# implementation detail: libnls exports ONLY the Win32 NLS surface libese needs
+# (the functions grepped out of dev/ese/src, plus CompareStringW) and the
+# InitializeNls entry point libese's platform init calls. Everything else --
+# all of ICU, our internal helpers -- is local. Get/SetLastError stay imports
+# (resolved by libese), so they are neither here nor exported.
+LIBNLS {
+    global:
+        InitializeNls;
+        CompareStringW;
+        GetLocaleInfoW;
+        GetLocaleInfoEx;
+        GetNLSVersionEx;
+        IsValidLocale;
+        LCIDToLocaleName;
+        LCMapStringW;
+        LCMapStringEx;
+        LocaleNameToLCID;
+        MultiByteToWideChar;
+        WideCharToMultiByte;
+    local:
+        *;
+};

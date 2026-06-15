@@ -27,8 +27,7 @@ internal sealed class CompositionBuilder
         if (norm.Cc != 0)
         {
             throw new InvalidOperationException(
-                $"U+{start:X4} has a round-trip mapping and ccc!=0, "
-                + "not possible in Unicode normalization");
+                $"U+{start:X4} has a round-trip mapping and ccc!=0, not possible in Unicode normalization");
         }
 
         // setRoundTripMapping ensured exactly two code points.
@@ -38,8 +37,7 @@ internal sealed class CompositionBuilder
         if (_norms.GetCc(lead) != 0)
         {
             throw new InvalidOperationException(
-                $"U+{start:X4}'s round-trip mapping's starter U+{lead:X4} has ccc!=0, "
-                + "not possible in Unicode normalization");
+                $"U+{start:X4}'s round-trip mapping's starter U+{lead:X4} has ccc!=0, not possible in Unicode normalization");
         }
 
         // Flag the trailing character as combining backward.
@@ -62,8 +60,7 @@ internal sealed class CompositionBuilder
                 if (trail == compositions[i].Trail)
                 {
                     throw new InvalidOperationException(
-                        $"same round-trip mapping for more than 1 code point (e.g., U+{start:X4}) "
-                        + $"to U+{lead:X4} + U+{trail:X4}");
+                        $"same round-trip mapping for more than 1 code point (e.g., U+{start:X4}) to U+{lead:X4} + U+{trail:X4}");
                 }
                 if (trail < compositions[i].Trail)
                 {

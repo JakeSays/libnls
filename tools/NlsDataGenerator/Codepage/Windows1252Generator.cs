@@ -2,16 +2,20 @@ using NlsDataGenerator.IcuFormat;
 
 namespace NlsDataGenerator.Codepage;
 
-// Emits the windows-1252 <-> UTF-16 table. cp1252 is the only non-Unicode codepage ESE text
-// columns use (the other, cp1200, is native UTF-16 and needs no table). The file is a
-// libnls-internal format: ASCII magic "1252", a uint32 version, then 256 little-endian uint16
-// giving the Unicode scalar for each byte.
+// Emits the windows-1252 -> UTF-16 table as an ICU data item for codepages.dat. cp1252 is the only
+// non-Unicode code page ESE text columns use (the other, 1200, is native UTF-16 and needs no
+// table). The item is an ICU DataHeader (dataFormat "Cp52") followed by 256 little-endian uint16,
+// the Unicode scalar for each byte; libnls loads it via udata_open.
 //
 // Bytes 0x00-0x7F are ASCII identity and 0xA0-0xFF are Latin-1 identity; only 0x80-0x9F differ.
 // The five undefined positions (0x81, 0x8D, 0x8F, 0x90, 0x9D) map to their own value.
 internal static class Windows1252Generator
 {
-    private const uint FormatVersion = 1;
+    // The 4-char dataFormat the libnls reader checks. cp1252 is a fixed Windows table, so the
+    // versions are nominal.
+    private const string DataFormat = "Cp52";
+    private static readonly byte[] FormatVersion = [1, 0, 0, 0];
+    private static readonly byte[] DataVersion = [0, 0, 0, 0];
 
     private static readonly ushort[] HighRange =
     [
@@ -21,12 +25,12 @@ internal static class Windows1252Generator
         0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x009D, 0x017E, 0x0178
     ];
 
-    public static void Write(string outputDirectory)
+    public static byte[] Generate()
     {
         var table = new ushort[256];
         for (var b = 0; b < 256; b++)
         {
-            if (b >= 0x80 && b <= 0x9F)
+            if (b is >= 0x80 and <= 0x9F)
             {
                 table[b] = HighRange[b - 0x80];
             }
@@ -37,15 +41,11 @@ internal static class Windows1252Generator
         }
 
         var writer = new LittleEndianWriter();
-        writer.WriteAsciiString("1252");
-        writer.WriteUInt32(FormatVersion);
+        new IcuDataHeader(DataFormat, FormatVersion, DataVersion).Write(writer);
         foreach (var scalar in table)
         {
             writer.WriteUInt16(scalar);
         }
-
-        var path = Path.Combine(outputDirectory, "cp1252.nlsdata");
-        File.WriteAllBytes(path, writer.ToArray());
-        Console.WriteLine($"wrote {path} ({writer.Length} bytes)");
+        return writer.ToArray();
     }
 }

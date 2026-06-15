@@ -97,7 +97,7 @@ internal static class ScriptSampleChars
             case "DIGIT":
                 return ReorderCodeDigit;
             default:
-                if (uscript.TryGetValue("USCRIPT_" + name, out var code))
+                if (uscript.TryGetValue($"USCRIPT_{name}", out var code))
                 {
                     return code;
                 }

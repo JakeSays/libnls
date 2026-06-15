@@ -75,8 +75,8 @@ internal static class DeResSelfTest
         {
             if (produced[i] != reference[i])
             {
-                Console.WriteLine($"{type}: BYTE DIFFER at offset {i} (0x{i:x}): "
-                    + $"produced {produced.Length}B 0x{produced[i]:x2}, reference {reference.Length}B 0x{reference[i]:x2}");
+                Console.WriteLine(
+                    $"{type}: BYTE DIFFER at offset {i} (0x{i:x}): produced {produced.Length}B 0x{produced[i]:x2}, reference {reference.Length}B 0x{reference[i]:x2}");
                 return true;
             }
         }

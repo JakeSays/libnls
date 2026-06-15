@@ -126,7 +126,7 @@ CollatorFactory::getDisplayName(const Locale& objectLocale,
 
 class ICUCollatorFactory : public ICUResourceBundleFactory {
  public:
-    ICUCollatorFactory() : ICUResourceBundleFactory(UnicodeString(U_ICUDATA_COLL, -1, US_INV)) { }
+    ICUCollatorFactory() : ICUResourceBundleFactory(UnicodeString(ucol_collationDataPath(), -1, US_INV)) { }
     virtual ~ICUCollatorFactory();
  protected:
     virtual UObject* create(const ICUServiceKey& key, const ICUService* service, UErrorCode& status) const override;
@@ -230,7 +230,7 @@ initAvailableLocaleList(UErrorCode &status) {
     StackUResourceBundle installed;
     int32_t i = 0;
     
-    index = ures_openDirect(U_ICUDATA_COLL, "res_index", &status);
+    index = ures_openDirect(ucol_collationDataPath(), "res_index", &status);
     ures_getByKey(index, "InstalledLocales", installed.getAlias(), &status);
 
     if(U_SUCCESS(status)) {

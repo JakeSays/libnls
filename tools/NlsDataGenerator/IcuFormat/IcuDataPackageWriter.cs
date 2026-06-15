@@ -32,7 +32,7 @@ internal sealed class IcuDataPackageWriter
     // The package name (and .dat basename) for a CLDR major.minor version, e.g. "cldr-48.2".
     public static string PackageNameForCldrVersion(string cldrVersion)
     {
-        return "cldr-" + cldrVersion;
+        return $"cldr-{cldrVersion}";
     }
 
     // Adds one data item under its tree path (relative to the package, without the package-name
@@ -50,7 +50,7 @@ internal sealed class IcuDataPackageWriter
         // gencmn sorts the items by their full prefixed basename via C strcmp; for ASCII names
         // that is ordinal byte order.
         var sorted = _items
-            .Select(item => (Name: _packageName + "/" + item.TreePath, item.Data))
+            .Select(item => (Name: $"{_packageName}/{item.TreePath}", item.Data))
             .OrderBy(entry => entry.Name, StringComparer.Ordinal)
             .ToList();
         var count = (uint)sorted.Count;

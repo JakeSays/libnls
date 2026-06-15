@@ -46,8 +46,8 @@ internal static class DeBlobSelfTest
         {
             if (produced[i] != reference[i])
             {
-                Console.WriteLine($"BYTE DIFFER at offset {i} (0x{i:x}): "
-                    + $"produced 0x{produced[i]:x2}, reference 0x{reference[i]:x2}");
+                Console.WriteLine(
+                    $"BYTE DIFFER at offset {i} (0x{i:x}): produced 0x{produced[i]:x2}, reference 0x{reference[i]:x2}");
                 return 1;
             }
         }

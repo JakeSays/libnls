@@ -56,8 +56,7 @@ internal sealed class Decomposer
                         if (cNorm.Kind != MappingKind.RoundTrip)
                         {
                             throw new InvalidOperationException(
-                                $"U+{start:X4}'s round-trip mapping's starter U+{c:X4} "
-                                + "one-way-decomposes, not possible in Unicode normalization");
+                                $"U+{start:X4}'s round-trip mapping's starter U+{c:X4} one-way-decomposes, not possible in Unicode normalization");
                         }
                         var myTrailCc = _norms.GetCc(Utf16.CodePointAt(m, i));
                         var cTrailChar = Utf16.LastCodePoint(cNorm.Mapping!);
@@ -65,16 +64,13 @@ internal sealed class Decomposer
                         if (cTrailCc > myTrailCc)
                         {
                             throw new InvalidOperationException(
-                                $"U+{start:X4}'s round-trip mapping's starter U+{c:X4} decomposes "
-                                + $"and the inner/earlier tccc={cTrailCc} > outer/following "
-                                + $"tccc={myTrailCc}, not possible in Unicode normalization");
+                                $"U+{start:X4}'s round-trip mapping's starter U+{c:X4} decomposes and the inner/earlier tccc={cTrailCc} > outer/following tccc={myTrailCc}, not possible in Unicode normalization");
                         }
                     }
                     else
                     {
                         throw new InvalidOperationException(
-                            $"U+{start:X4}'s round-trip mapping's non-starter U+{c:X4} decomposes, "
-                            + "not possible in Unicode normalization");
+                            $"U+{start:X4}'s round-trip mapping's non-starter U+{c:X4} decomposes, not possible in Unicode normalization");
                     }
                 }
                 decomposed ??= new StringBuilder(m[..prev]);
@@ -87,8 +83,7 @@ internal sealed class Decomposer
                 if (norm.Kind == MappingKind.RoundTrip && prev != 0)
                 {
                     throw new InvalidOperationException(
-                        $"U+{start:X4}'s round-trip mapping's non-starter U+{c:X4} decomposes, "
-                        + "not possible in Unicode normalization");
+                        $"U+{start:X4}'s round-trip mapping's non-starter U+{c:X4} decomposes, not possible in Unicode normalization");
                 }
                 decomposed ??= new StringBuilder(m[..prev]);
                 decomposed.Append(buffer, 0, hangulLength);

@@ -51,7 +51,7 @@ internal static class DatPackageSelfTest
             }
             previousName = name;
 
-            var prefix = packageName + "/";
+            var prefix = $"{packageName}/";
             if (!name.StartsWith(prefix, StringComparison.Ordinal))
             {
                 Console.Error.WriteLine($"FAIL: {name} lacks the {prefix} prefix");

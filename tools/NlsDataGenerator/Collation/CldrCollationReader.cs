@@ -28,7 +28,7 @@ internal sealed class CldrCollationReader
         {
             return cached;
         }
-        var path = Path.Combine(_collationDirectory, locale + ".xml");
+        var path = Path.Combine(_collationDirectory, $"{locale}.xml");
         var result = Parse(locale, path);
         _cache[locale] = result;
         return result;

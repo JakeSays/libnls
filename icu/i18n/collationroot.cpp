@@ -24,6 +24,7 @@
 #include "collationsettings.h"
 #include "collationtailoring.h"
 #include "normalizer2impl.h"
+#include "ucol_imp.h"
 #include "ucln_in.h"
 #include "udatamem.h"
 #include "umutex.h"
@@ -84,7 +85,7 @@ CollationRoot::load(const char* ucadataPath, UErrorCode &errorCode) {
         return;
     }
     t->memory = ucadataPath ? CollationRoot::loadFromFile(ucadataPath, errorCode) :
-                              udata_openChoice(U_ICUDATA_NAME U_TREE_SEPARATOR_STRING "coll",
+                              udata_openChoice(ucol_collationDataPath(),
                                                "icu", "ucadata",
                                                CollationDataReader::isAcceptable,
                                                t->version, &errorCode);

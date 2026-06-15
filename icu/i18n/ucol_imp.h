@@ -48,9 +48,12 @@ U_CAPI UBool U_EXPORT2
 ucol_equals(const UCollator *source, const UCollator *target);
 
 /**
- * Convenience string denoting the Collation data tree
+ * The collation data tree path, "<package>-coll". The package is the
+ * configurable udata package name (udata_getICUDataPackage), so collation data
+ * loads from libnls's cldr-<version> package rather than a U_ICUDATA_NAME-named
+ * one. Built once; the package name is set before any collator opens.
  */
-#define U_ICUDATA_COLL U_ICUDATA_NAME U_TREE_SEPARATOR_STRING "coll"
+U_CFUNC const char * ucol_collationDataPath(void);
 
 #ifdef __cplusplus
 

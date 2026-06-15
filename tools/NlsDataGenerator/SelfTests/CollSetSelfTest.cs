@@ -50,7 +50,7 @@ internal static class CollSetSelfTest
                 ++exempt;
                 continue;
             }
-            if (!File.Exists(Path.Combine(cldrCollationDirectory, locale + ".xml")))
+            if (!File.Exists(Path.Combine(cldrCollationDirectory, $"{locale}.xml")))
             {
                 ++skip;
                 continue;
@@ -154,7 +154,7 @@ internal static class CollSetSelfTest
         }
         foreach (var failure in failures.Take(60))
         {
-            Console.WriteLine("  " + failure);
+            Console.WriteLine($"  {failure}");
         }
         if (failures.Count > 60)
         {

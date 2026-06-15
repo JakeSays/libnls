@@ -15,7 +15,7 @@ internal static class ResDumpSelfTest
             try
             {
                 value = ResourceType.GetType(word) == ResourceType.StringV2
-                    ? '"' + reader.ReadString(word) + '"'
+                    ? $"\"{reader.ReadString(word)}\""
                     : $"(type {ResourceType.GetType(word)})";
             }
             catch (Exception error)

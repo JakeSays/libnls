@@ -452,7 +452,7 @@ ucol_prepareShortStringOpen( const char *definition,
 
     CharString buffer = ulocimp_canonicalize(s.locale.toStringPiece(), *status);
 
-    UResourceBundle *b = ures_open(U_ICUDATA_COLL, buffer.data(), status);
+    UResourceBundle *b = ures_open(ucol_collationDataPath(), buffer.data(), status);
     /* we try to find stuff from keyword */
     UResourceBundle *collations = ures_getByKey(b, "collations", nullptr, status);
     UResourceBundle *collElem = nullptr;

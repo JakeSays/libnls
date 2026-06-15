@@ -378,6 +378,26 @@ U_CAPI void U_EXPORT2
 udata_setAppData(const char *packageName, const void *data, UErrorCode *err);
 
 /**
+ * libnls extension. Overrides the package name ICU uses to look up its common
+ * data, normally the build-time U_ICUDATA_NAME ("icudt78l"). libnls decouples
+ * the data identity from the ICU code version: the common-data package it
+ * installs (cldr-<version>.dat) names its ToC entries with its own prefix, and
+ * this tells ICU's loader to build lookup names with that prefix instead of
+ * U_ICUDATA_NAME. Pass nullptr to restore the default. Set once before any
+ * collation/normalization data is opened.
+ * @param packageName the ToC entry prefix to use, or nullptr for the default
+ */
+U_CAPI void U_EXPORT2
+udata_setICUDataPackage(const char *packageName);
+
+/**
+ * libnls extension. The package name set by udata_setICUDataPackage, or
+ * U_ICUDATA_NAME if none was set.
+ */
+U_CAPI const char * U_EXPORT2
+udata_getICUDataPackage(void);
+
+/**
  * Possible settings for udata_setFileAccess()
  * @see udata_setFileAccess
  * @stable ICU 3.4

@@ -221,6 +221,30 @@ setCommonICUDataPointer(const void *pData, UBool /*warn*/, UErrorCode *pErrorCod
 
 #endif
 
+/*
+ * libnls extension: the package-name prefix ICU uses to look up its common
+ * data. Empty means "use U_ICUDATA_NAME" (stock behavior). libnls sets this to
+ * the cldr-<version> package's own prefix so the loader's ToC lookups match the
+ * data's entry names without depending on the ICU code version. Set once at
+ * init before any data is opened, so no synchronization is needed.
+ */
+static char gICUDataPackage[64] = "";
+
+U_CAPI void U_EXPORT2
+udata_setICUDataPackage(const char *packageName) {
+    if(packageName==nullptr || packageName[0]==0) {
+        gICUDataPackage[0]=0;
+    } else {
+        uprv_strncpy(gICUDataPackage, packageName, sizeof(gICUDataPackage)-1);
+        gICUDataPackage[sizeof(gICUDataPackage)-1]=0;
+    }
+}
+
+U_CAPI const char * U_EXPORT2
+udata_getICUDataPackage(void) {
+    return gICUDataPackage[0] ? gICUDataPackage : U_ICUDATA_NAME;
+}
+
 static const char *
 findBasename(const char *path) {
     const char *basename=uprv_strrchr(path, U_FILE_SEP_CHAR);
@@ -1165,11 +1189,13 @@ doOpenChoice(const char *path, const char *type, const char *name,
     FileTracer::traceOpen(path, type, name);
 
 
-    /* Is this path ICU data? */
+    /* Is this path ICU data? (match the configurable package prefix, default U_ICUDATA_NAME) */
+    const char *icuDataPkg = udata_getICUDataPackage();
+    int32_t icuDataPkgLen = static_cast<int32_t>(uprv_strlen(icuDataPkg));
     if(path == nullptr ||
        !strcmp(path, U_ICUDATA_ALIAS) ||  /* "ICUDATA" */
-       !uprv_strncmp(path, U_ICUDATA_NAME U_TREE_SEPARATOR_STRING, /* "icudt26e-" */
-                     uprv_strlen(U_ICUDATA_NAME U_TREE_SEPARATOR_STRING)) ||  
+       (!uprv_strncmp(path, icuDataPkg, icuDataPkgLen) && /* "<pkg>-" */
+        path[icuDataPkgLen] == U_TREE_SEPARATOR) ||
        !uprv_strncmp(path, U_ICUDATA_ALIAS U_TREE_SEPARATOR_STRING, /* "ICUDATA-" */
                      uprv_strlen(U_ICUDATA_ALIAS U_TREE_SEPARATOR_STRING))) {
       isICUData = true;
@@ -1201,7 +1227,7 @@ doOpenChoice(const char *path, const char *type, const char *name,
 
     /* ======= Set up strings */
     if(path==nullptr) {
-        pkgName.append(U_ICUDATA_NAME, *pErrorCode);
+        pkgName.append(icuDataPkg, *pErrorCode);
     } else {
         const char *pkg;
         const char *first;
@@ -1219,7 +1245,7 @@ doOpenChoice(const char *path, const char *type, const char *name,
             if(treeChar) { 
                 treeName.append(treeChar+1, *pErrorCode); /* following '-' */
                 if(isICUData) {
-                    pkgName.append(U_ICUDATA_NAME, *pErrorCode);
+                    pkgName.append(icuDataPkg, *pErrorCode);
                 } else {
                     pkgName.append(path, static_cast<int32_t>(treeChar - path), *pErrorCode);
                     if (first == nullptr) {
@@ -1232,7 +1258,7 @@ doOpenChoice(const char *path, const char *type, const char *name,
                 }
             } else {
                 if(isICUData) {
-                    pkgName.append(U_ICUDATA_NAME, *pErrorCode);
+                    pkgName.append(icuDataPkg, *pErrorCode);
                 } else {
                     pkgName.append(path, *pErrorCode);
                 }

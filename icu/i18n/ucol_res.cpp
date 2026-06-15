@@ -34,9 +34,11 @@
 #include "unicode/tblcoll.h"
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
+#include "unicode/udata.h"
 #include "unicode/unistr.h"
 #include "unicode/ures.h"
 #include "charstr.h"
+#include "cstring.h"
 #include "cmemory.h"
 #include "cstring.h"
 #include "collationdatareader.h"
@@ -54,6 +56,23 @@
 #include "uresimp.h"
 #include "ustrenum.h"
 #include "utracimp.h"
+
+U_CFUNC const char *
+ucol_collationDataPath(void) {
+    // "<package>-coll", built once from the configurable data-package name,
+    // which libnls sets before any collator opens.
+    static char path[80] = "";
+    if(path[0]==0) {
+        const char *pkg = udata_getICUDataPackage();
+        int32_t n = static_cast<int32_t>(uprv_strlen(pkg));
+        if(n > static_cast<int32_t>(sizeof(path)) - 6) {
+            n = static_cast<int32_t>(sizeof(path)) - 6;
+        }
+        uprv_memcpy(path, pkg, n);
+        uprv_strcpy(path + n, U_TREE_SEPARATOR_STRING "coll");
+    }
+    return path;
+}
 
 U_NAMESPACE_BEGIN
 
@@ -81,7 +100,7 @@ ucol_res_cleanup() {
 void U_CALLCONV
 CollationLoader::loadRootRules(UErrorCode &errorCode) {
     if(U_FAILURE(errorCode)) { return; }
-    rootBundle = ures_open(U_ICUDATA_COLL, kRootLocaleName, &errorCode);
+    rootBundle = ures_open(ucol_collationDataPath(), kRootLocaleName, &errorCode);
     if(U_FAILURE(errorCode)) { return; }
     rootRules = ures_getStringByKey(rootBundle, "UCARules", &rootRulesLength, &errorCode);
     if(U_FAILURE(errorCode)) {
@@ -118,7 +137,7 @@ CollationLoader::loadRules(const char *localeID, const char *collationType,
     uprv_memcpy(type, collationType, typeLength + 1);
     T_CString_toLowerCase(type);
 
-    LocalUResourceBundlePointer bundle(ures_open(U_ICUDATA_COLL, localeID, &errorCode));
+    LocalUResourceBundlePointer bundle(ures_open(ucol_collationDataPath(), localeID, &errorCode));
     LocalUResourceBundlePointer collations(
             ures_getByKey(bundle.getAlias(), "collations", nullptr, &errorCode));
     LocalUResourceBundlePointer data(
@@ -238,7 +257,7 @@ const CollationCacheEntry *
 CollationLoader::loadFromLocale(UErrorCode &errorCode) {
     if(U_FAILURE(errorCode)) { return nullptr; }
     U_ASSERT(bundle == nullptr);
-    bundle = ures_openNoDefault(U_ICUDATA_COLL, locale.getBaseName(), &errorCode);
+    bundle = ures_openNoDefault(ucol_collationDataPath(), locale.getBaseName(), &errorCode);
     if(errorCode == U_MISSING_RESOURCE_ERROR) {
         errorCode = U_USING_DEFAULT_WARNING;
 
@@ -430,7 +449,7 @@ CollationLoader::loadFromData(UErrorCode &errorCode) {
     if(actualAndValidLocalesAreDifferent) {
         // Opening a bundle for the actual locale should always succeed.
         LocalUResourceBundlePointer actualBundle(
-                ures_open(U_ICUDATA_COLL, actualLocale, &errorCode));
+                ures_open(ucol_collationDataPath(), actualLocale, &errorCode));
         if(U_FAILURE(errorCode)) { return nullptr; }
         UErrorCode internalErrorCode = U_ZERO_ERROR;
         LocalUResourceBundlePointer def(
@@ -611,7 +630,7 @@ ucol_getKeywordValues(const char *keyword, UErrorCode *status) {
         *status = U_ILLEGAL_ARGUMENT_ERROR;
         return nullptr;
     }
-    return ures_getKeywordValues(U_ICUDATA_COLL, RESOURCE_NAME, status);
+    return ures_getKeywordValues(ucol_collationDataPath(), RESOURCE_NAME, status);
 }
 
 static const UEnumeration defaultKeywordValues = {
@@ -680,7 +699,7 @@ ucol_getKeywordValuesForLocale(const char* /*key*/, const char* locale,
     // with other locale services.
 
     // Read available collation values from collation bundles.
-    LocalUResourceBundlePointer bundle(ures_open(U_ICUDATA_COLL, locale, status));
+    LocalUResourceBundlePointer bundle(ures_open(ucol_collationDataPath(), locale, status));
     KeywordsSink sink(*status);
     ures_getAllItemsWithFallback(bundle.getAlias(), RESOURCE_NAME, sink, *status);
     if (U_FAILURE(*status)) { return nullptr; }
@@ -703,7 +722,7 @@ ucol_getFunctionalEquivalent(char* result, int32_t resultCapacity,
                              UBool* isAvailable, UErrorCode* status)
 {
     // N.B.: Resource name is "collations" but keyword is "collation"
-    return ures_getFunctionalEquivalent(result, resultCapacity, U_ICUDATA_COLL,
+    return ures_getFunctionalEquivalent(result, resultCapacity, ucol_collationDataPath(),
         "collations", keyword, locale,
         isAvailable, true, status);
 }
