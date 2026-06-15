@@ -12,8 +12,6 @@
 set(ICU_COMMON_SOURCES
     common/appendable.cpp
     common/bmpset.cpp
-    common/brkeng.cpp
-    common/brkiter.cpp
     common/bytesinkutil.cpp
     common/bytestream.cpp
     common/bytestriebuilder.cpp
@@ -26,54 +24,26 @@ set(ICU_COMMON_SOURCES
     common/cstr.cpp
     common/cstring.cpp
     common/cwchar.cpp
-    common/dictbe.cpp
-    common/dictionarydata.cpp
     common/dtintrv.cpp
     common/edits.cpp
     common/errorcode.cpp
-    common/filteredbrk.cpp
     common/filterednormalizer2.cpp
     common/fixedstring.cpp
     common/icudataver.cpp
-    common/icuplug.cpp
+    common/libnls_excised_stubs.cpp
     common/loadednormalizer2impl.cpp
     common/localebuilder.cpp
-    common/localematcher.cpp
     common/localeprioritylist.cpp
     common/locavailable.cpp
-    common/locbased.cpp
-    common/locdispnames.cpp
-    common/locdistance.cpp
-    common/locdspnm.cpp
     common/locid.cpp
-    common/loclikely.cpp
-    common/loclikelysubtags.cpp
     common/locmap.cpp
-    common/locresdata.cpp
     common/locutil.cpp
-    common/lsr.cpp
-    common/lstmbe.cpp
-    common/messagepattern.cpp
-    common/mlbe.cpp
     common/normalizer2.cpp
     common/normalizer2impl.cpp
-    common/normlzr.cpp
     common/parsepos.cpp
     common/patternprops.cpp
-    common/pluralmap.cpp
     common/propsvec.cpp
-    common/punycode.cpp
     common/putil.cpp
-    common/rbbi_cache.cpp
-    common/rbbi.cpp
-    common/rbbidata.cpp
-    common/rbbinode.cpp
-    common/rbbirb.cpp
-    common/rbbiscan.cpp
-    common/rbbisetb.cpp
-    common/rbbistbl.cpp
-    common/rbbitblb.cpp
-    common/resbund_cnv.cpp
     common/resbund.cpp
     common/resource.cpp
     common/restrace.cpp
@@ -87,19 +57,12 @@ set(ICU_COMMON_SOURCES
     common/servrbf.cpp
     common/servslkf.cpp
     common/sharedobject.cpp
-    common/simpleformatter.cpp
     common/static_unicode_sets.cpp
     common/stringpiece.cpp
     common/stringtriebuilder.cpp
     common/uarrsort.cpp
-    common/ubidi.cpp
-    common/ubidiln.cpp
-    common/ubiditransform.cpp
-    common/ubidiwrt.cpp
-    common/ubrk.cpp
     common/ucase.cpp
     common/ucasemap.cpp
-    common/ucasemap_titlecase_brkiter.cpp
     common/ucat.cpp
     common/ucharstriebuilder.cpp
     common/ucharstrie.cpp
@@ -107,45 +70,18 @@ set(ICU_COMMON_SOURCES
     common/uchriter.cpp
     common/ucln_cmn.cpp
     common/ucmndata.cpp
-    common/ucnv2022.cpp
-    common/ucnv_bld.cpp
-    common/ucnvbocu.cpp
-    common/ucnv_cb.cpp
-    common/ucnv_cnv.cpp
-    common/ucnv.cpp
-    common/ucnv_ct.cpp
-    common/ucnvdisp.cpp
-    common/ucnv_err.cpp
-    common/ucnv_ext.cpp
-    common/ucnvhz.cpp
-    common/ucnv_io.cpp
-    common/ucnvisci.cpp
-    common/ucnvlat1.cpp
-    common/ucnv_lmb.cpp
-    common/ucnvmbcs.cpp
-    common/ucnvscsu.cpp
-    common/ucnvsel.cpp
-    common/ucnv_set.cpp
-    common/ucnv_u16.cpp
-    common/ucnv_u32.cpp
-    common/ucnv_u7.cpp
-    common/ucnv_u8.cpp
     common/ucol_swp.cpp
     common/ucptrie.cpp
-    common/ucurr.cpp
     common/udata.cpp
     common/udatamem.cpp
     common/udataswp.cpp
     common/uenum.cpp
     common/uhash.cpp
     common/uhash_us.cpp
-    common/uidna.cpp
-    common/uinit.cpp
     common/uinvchar.cpp
     common/uiter.cpp
     common/ulist.cpp
     common/ulocale.cpp
-    common/ulocbuilder.cpp
     common/uloc.cpp
     common/uloc_keytype.cpp
     common/uloc_tag.cpp
@@ -153,7 +89,6 @@ set(ICU_COMMON_SOURCES
     common/umath.cpp
     common/umutablecptrie.cpp
     common/umutex.cpp
-    common/unames.cpp
     common/unifiedcache.cpp
     common/unifilt.cpp
     common/unifunct.cpp
@@ -161,34 +96,21 @@ set(ICU_COMMON_SOURCES
     common/unisetspan.cpp
     common/unistr_case.cpp
     common/unistr_case_locale.cpp
-    common/unistr_cnv.cpp
     common/unistr.cpp
     common/unistr_props.cpp
-    common/unistr_titlecase_brkiter.cpp
-    common/unormcmp.cpp
-    common/unorm.cpp
     common/uobject.cpp
     common/uresbund.cpp
-    common/ures_cnv.cpp
     common/uresdata.cpp
-    common/usc_impl.cpp
-    common/uscript.cpp
     common/uset.cpp
     common/usetiter.cpp
-    common/uset_props.cpp
-    common/ushape.cpp
-    common/usprep.cpp
     common/ustack.cpp
     common/ustrcase.cpp
     common/ustrcase_locale.cpp
-    common/ustr_cnv.cpp
     common/ustrenum.cpp
     common/ustrfmt.cpp
     common/ustring.cpp
-    common/ustr_titlecase_brkiter.cpp
     common/ustrtrns.cpp
     common/ustr_wcs.cpp
-    common/utext.cpp
     common/utf_impl.cpp
     common/util.cpp
     common/util_props.cpp
@@ -197,12 +119,10 @@ set(ICU_COMMON_SOURCES
     common/utrie2.cpp
     common/utrie.cpp
     common/utrie_swap.cpp
-    common/uts46.cpp
     common/utypes.cpp
     common/uvector.cpp
     common/uvectr32.cpp
     common/uvectr64.cpp
-    common/wintz.cpp
 )
 
 # i18n/: the COLLATION SUBSET ONLY (+ ucln_in.cpp, the i18n cleanup registry). See VENDORING.md.
@@ -235,9 +155,6 @@ set(ICU_I18N_COLLATION_SOURCES
     i18n/utf8collationiterator.cpp
 )
 
-# stubdata: an empty icudt78_dat so the library links before real data exists. Design step 5
-# replaces this with the data regenerated from pinned FractionalUCA/CLDR text.
-set(ICU_STUBDATA_SOURCE stubdata/stubdata.cpp)
 
 # Header files — listed so they appear in the project and the cleanup round can trim them too.
 # common/ headers are all vendored (wholesale); i18n/ is the clang -MD-confirmed closure (33).
@@ -261,8 +178,6 @@ set(ICU_COMMON_HEADERS
     common/icuplugimp.h
     common/localefallback_data.h
     common/localeprioritylist.h
-    common/localsvc.h
-    common/locbased.h
     common/locdistance.h
     common/loclikelysubtags.h
     common/locmap.h
@@ -277,20 +192,8 @@ set(ICU_COMMON_HEADERS
     common/norm2_nfc_data.h
     common/normalizer2impl.h
     common/patternprops.h
-    common/pluralmap.h
-    common/propname_data.h
-    common/propname.h
     common/propsvec.h
-    common/punycode.h
     common/putilimp.h
-    common/rbbi_cache.h
-    common/rbbidata.h
-    common/rbbinode.h
-    common/rbbirb.h
-    common/rbbirpt.h
-    common/rbbiscan.h
-    common/rbbisetb.h
-    common/rbbitblb.h
     common/resource.h
     common/restrace.h
     common/ruleiter.h
@@ -302,9 +205,6 @@ set(ICU_COMMON_HEADERS
     common/static_unicode_sets.h
     common/uarrsort.h
     common/uassert.h
-    common/ubidiimp.h
-    common/ubidi_props_data.h
-    common/ubidi_props.h
     common/ubrkimpl.h
     common/ucase.h
     common/ucasemap_imp.h
@@ -314,12 +214,6 @@ set(ICU_COMMON_HEADERS
     common/ucln.h
     common/ucln_imp.h
     common/ucmndata.h
-    common/ucnv_bld.h
-    common/ucnv_cnv.h
-    common/ucnv_ext.h
-    common/ucnv_imp.h
-    common/ucnv_io.h
-    common/ucnvmbcs.h
     common/ucol_data.h
     common/ucol_swp.h
     common/ucptrie_impl.h
@@ -341,11 +235,9 @@ set(ICU_COMMON_HEADERS
     common/unistrappender.h
     common/unormimp.h
     common/uposixdefs.h
-    common/uprops.h
     common/uresdata.h
     common/uresimp.h
     common/ureslocs.h
-    common/usc_impl.h
     common/uset_imp.h
     common/ustr_cnv.h
     common/ustrenum.h
@@ -360,7 +252,6 @@ set(ICU_COMMON_HEADERS
     common/uvector.h
     common/uvectr32.h
     common/uvectr64.h
-    common/wintz.h
     common/unicode/appendable.h
     common/unicode/brkiter.h
     common/unicode/bytestream.h
@@ -467,13 +358,9 @@ set(ICU_COMMON_HEADERS
 
 set(ICU_I18N_HEADERS
     i18n/bocsu.h
-    i18n/collationbuilder.h
     i18n/collationcompare.h
-    i18n/collationdatabuilder.h
     i18n/collationdata.h
     i18n/collationdatareader.h
-    i18n/collationdatawriter.h
-    i18n/collationfastlatinbuilder.h
     i18n/collationfastlatin.h
     i18n/collationfcd.h
     i18n/collation.h
@@ -481,11 +368,9 @@ set(ICU_I18N_HEADERS
     i18n/collationkeys.h
     i18n/collationrootelements.h
     i18n/collationroot.h
-    i18n/collationruleparser.h
     i18n/collationsets.h
     i18n/collationsettings.h
     i18n/collationtailoring.h
-    i18n/collationweights.h
     i18n/collunsafe.h
     i18n/ucln_in.h
     i18n/ucol_imp.h
@@ -506,7 +391,6 @@ add_library(icu OBJECT
     ${ICU_COMMON_HEADERS}
     ${ICU_I18N_COLLATION_SOURCES}
     ${ICU_I18N_HEADERS}
-    ${ICU_STUBDATA_SOURCE}
 )
 
 target_include_directories(icu PUBLIC

@@ -97,7 +97,6 @@
 #   define NOMCX
 #   include <windows.h>
 #   include "unicode/uloc.h"
-#   include "wintz.h"
 #elif U_PLATFORM == U_PF_OS400
 #   include <float.h>
 #   include <qusec.h>       /* error code structure */

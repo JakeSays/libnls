@@ -665,10 +665,6 @@ U_NAMESPACE_END
  *      our common data.                                                *
  *                                                                      *
  *----------------------------------------------------------------------*/
-#if !defined(ICU_DATA_DIR_WINDOWS)
-// When using the Windows system data, we expect only a single data file.
-extern "C" const DataHeader U_DATA_API U_ICUDATA_ENTRY_POINT;
-#endif
 
 /*
  * This would be a good place for weak-linkage declarations of
@@ -716,39 +712,13 @@ openCommonData(const char *path,          /*  Path from OpenChoice?          */
             if(gCommonICUDataArray[commonDataIndex] != nullptr) {
                 return gCommonICUDataArray[commonDataIndex];
             }
-#if !defined(ICU_DATA_DIR_WINDOWS)
-// When using the Windows system data, we expect only a single data file.
-            int32_t i;
-            for(i = 0; i < commonDataIndex; ++i) {
-                if(gCommonICUDataArray[i]->pHeader == &U_ICUDATA_ENTRY_POINT) {
-                    /* The linked-in data is already in the list. */
-                    return nullptr;
-                }
-            }
-#endif
         }
 
-        /* Add the linked-in data to the list. */
-        /*
-         * This is where we would check and call weakly linked partial-data-library
-         * access functions.
-         */
-        /*
-        if (uprv_getICUData_collation) {
-            setCommonICUDataPointer(uprv_getICUData_collation(), false, pErrorCode);
-        }
-        if (uprv_getICUData_conversion) {
-            setCommonICUDataPointer(uprv_getICUData_conversion(), false, pErrorCode);
-        }
-        */
-#if !defined(ICU_DATA_DIR_WINDOWS)
-// When using the Windows system data, we expect only a single data file.
-        setCommonICUDataPointer(&U_ICUDATA_ENTRY_POINT, false, pErrorCode);
-        {
-            Mutex lock;
-            return gCommonICUDataArray[commonDataIndex];
-        }
-#endif
+        /* libnls removed the linked-in (stub) ICU common data. The real common
+         * data is installed via udata_setCommonData before any open, so if it
+         * is not cached here there is nothing to return -- an empty stub would
+         * be useless. */
+        return nullptr;
     }
 
 
