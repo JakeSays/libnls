@@ -26,8 +26,8 @@ add_subdirectory(icu)
 # needs no external files. The command reruns only when the generator or the LCID map changes
 # (a CLDR/UCD bump is a deliberate version edit that invalidates the build dir anyway).
 set(NLS_DATA_GEN
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/NlsDataGenerator/bin/Release/net10.0/nls-data-gen
-    CACHE FILEPATH "nls-data-gen executable that builds the NLS data packages")
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/prebuilts/nls-data-gen
+    CACHE FILEPATH "Prebuilt nls-data-gen (AOT). Committed under tools/prebuilts and refreshed by hand when the generator changes; the build runs it but never rebuilds it.")
 set(NLS_DATA_OUT ${CMAKE_CURRENT_BINARY_DIR}/nlsdata)
 set(NLS_COLLATION_DAT ${NLS_DATA_OUT}/cldr-${CLDR_VERSION}.dat)
 set(NLS_CODEPAGES_DAT ${NLS_DATA_OUT}/codepages.dat)

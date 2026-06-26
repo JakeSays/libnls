@@ -4,4 +4,3 @@ out/
 bin/
 obj/
 publish/
-!tools/bin
