@@ -793,11 +793,16 @@ public:
 
     /** @internal */
     static inline RuleBasedCollator *rbcFromUCollator(UCollator *uc) {
-        return dynamic_cast<RuleBasedCollator *>(fromUCollator(uc));
+        // -fno-rtti: exact class-id check stands in for the dynamic_cast.
+        Collator *c = fromUCollator(uc);
+        return (c != nullptr && c->getDynamicClassID() == RuleBasedCollator::getStaticClassID())
+            ? static_cast<RuleBasedCollator *>(c) : nullptr;
     }
     /** @internal */
     static inline const RuleBasedCollator *rbcFromUCollator(const UCollator *uc) {
-        return dynamic_cast<const RuleBasedCollator *>(fromUCollator(uc));
+        const Collator *c = fromUCollator(uc);
+        return (c != nullptr && c->getDynamicClassID() == RuleBasedCollator::getStaticClassID())
+            ? static_cast<const RuleBasedCollator *>(c) : nullptr;
     }
 
     /**

@@ -167,7 +167,10 @@ public:
     }
     
     virtual UObject* handleDefault(const ICUServiceKey& key, UnicodeString* actualID, UErrorCode& status) const override {
-        const LocaleKey* lkey = dynamic_cast<const LocaleKey*>(&key);
+        // -fno-rtti: the collation service always creates LocaleKeys, so an
+        // exact class-id check stands in for the dynamic_cast.
+        const LocaleKey* lkey = (key.getDynamicClassID() == LocaleKey::getStaticClassID())
+            ? static_cast<const LocaleKey*>(&key) : nullptr;
         U_ASSERT(lkey != nullptr);
         if (actualID) {
             // Ugly Hack Alert! We return an empty actualID to signal
@@ -640,7 +643,8 @@ Collator::Collator(const Collator &other)
 bool Collator::operator==(const Collator& other) const
 {
     // Subclasses: Call this method and then add more specific checks.
-    return typeid(*this) == typeid(other);
+    // -fno-rtti: getDynamicClassID() stands in for typeid.
+    return getDynamicClassID() == other.getDynamicClassID();
 }
 
 bool Collator::operator!=(const Collator& other) const
@@ -747,7 +751,9 @@ UObject*
 CFactory::create(const ICUServiceKey& key, const ICUService* /* service */, UErrorCode& status) const
 {
     if (handlesKey(key, status)) {
-        const LocaleKey* lkey = dynamic_cast<const LocaleKey*>(&key);
+        // -fno-rtti: keys handled here are always LocaleKeys (see handlesKey).
+        const LocaleKey* lkey = (key.getDynamicClassID() == LocaleKey::getStaticClassID())
+            ? static_cast<const LocaleKey*>(&key) : nullptr;
         U_ASSERT(lkey != nullptr);
         Locale validLoc;
         lkey->currentLocale(validLoc);

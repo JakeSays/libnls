@@ -97,6 +97,11 @@ public:
 
     virtual ~CollationIterator();
 
+    // -fno-rtti discriminator: CollationElementIterator's clone path uses getKind()
+    // instead of dynamic_cast to identify the concrete UTF-16 iterator subtype.
+    enum Kind { KIND_OTHER, KIND_UTF16, KIND_FCD_UTF16 };
+    virtual Kind getKind() const { return KIND_OTHER; }
+
     virtual bool operator==(const CollationIterator &other) const;
     inline bool operator!=(const CollationIterator &other) const {
         return !operator==(other);

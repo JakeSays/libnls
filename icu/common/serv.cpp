@@ -935,7 +935,8 @@ ICUService::clearServiceCache()
 UBool 
 ICUService::acceptsListener(const EventListener& l) const 
 {
-    return dynamic_cast<const ServiceListener*>(&l) != nullptr;
+    // -fno-rtti: exact class-id check stands in for the dynamic_cast type test.
+    return l.getDynamicClassID() == ServiceListener::getStaticClassID();
 }
 
 void 

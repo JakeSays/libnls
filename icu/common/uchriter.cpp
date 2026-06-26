@@ -72,7 +72,8 @@ UCharCharacterIterator::operator==(const ForwardCharacterIterator& that) const {
     if (this == &that) {
         return true;
     }
-    if (typeid(*this) != typeid(that)) {
+    // libnls builds ICU -fno-rtti; getDynamicClassID() stands in for typeid.
+    if (getDynamicClassID() != that.getDynamicClassID()) {
         return false;
     }
 

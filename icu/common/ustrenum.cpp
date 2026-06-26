@@ -122,7 +122,8 @@ StringEnumeration::setChars(const char *s, int32_t length, UErrorCode &status) {
 }
 bool
 StringEnumeration::operator==(const StringEnumeration& that)const {
-    return typeid(*this) == typeid(that); 
+    // libnls builds ICU -fno-rtti; getDynamicClassID() stands in for typeid.
+    return getDynamicClassID() == that.getDynamicClassID();
 }
 
 bool

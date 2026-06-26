@@ -29,6 +29,14 @@ U_NAMESPACE_BEGIN
 
 class UnifiedCache;
 
+// libnls builds ICU -fno-rtti. CacheKey identifies its concrete type without typeid: the address
+// of a per-type static (UnifiedCacheTypeId<C>::value) is a stable unique id used for equals(), and
+// __PRETTY_FUNCTION__ yields a per-type name string for hashing / descriptions in place of
+// typeid(T).name().
+template<typename C> struct UnifiedCacheTypeId { static const char value; };
+template<typename C> const char UnifiedCacheTypeId<C>::value = 0;
+template<typename T> inline const char *unifiedCacheTypeName() { return __PRETTY_FUNCTION__; }
+
 /**
  * A base class for all cache keys.
  */
@@ -75,6 +83,12 @@ class U_COMMON_API CacheKeyBase : public UObject {
     */
    virtual char *writeDescription(char *buffer, int32_t bufSize) const = 0;
 
+   /**
+    * @internal -fno-rtti type identity: a stable per-concrete-type pointer, used in
+    * place of typeid for equals(). See UnifiedCacheTypeId.
+    */
+   virtual const void *typeId() const = 0;
+
    friend inline bool operator==(const CacheKeyBase& lhs,
                                  const CacheKeyBase& rhs) {
        return lhs.equals(rhs);
@@ -108,7 +122,7 @@ class CacheKey : public CacheKeyBase {
     * The template parameter, T, determines the hash code returned.
     */
    virtual int32_t hashCode() const override {
-       const char *s = typeid(T).name();
+       const char *s = unifiedCacheTypeName<T>();
        return ustr_hashCharsN(s, static_cast<int32_t>(uprv_strlen(s)));
    }
 
@@ -116,10 +130,15 @@ class CacheKey : public CacheKeyBase {
     * Use the value type, T,  as the description.
     */
    virtual char *writeDescription(char *buffer, int32_t bufLen) const override {
-       const char *s = typeid(T).name();
+       const char *s = unifiedCacheTypeName<T>();
        uprv_strncpy(buffer, s, bufLen);
        buffer[bufLen - 1] = 0;
        return buffer;
+   }
+
+   // -fno-rtti type identity for this concrete key class (see UnifiedCacheTypeId).
+   virtual const void *typeId() const override {
+       return &UnifiedCacheTypeId<CacheKey<T> >::value;
    }
 
  protected:
@@ -127,7 +146,7 @@ class CacheKey : public CacheKeyBase {
     * Two objects are equal if they are of the same type.
     */
    virtual bool equals(const CacheKeyBase &other) const override {
-       return this == &other || typeid(*this) == typeid(other);
+       return this == &other || typeId() == other.typeId();
    }
 };
 
@@ -154,6 +173,10 @@ class LocaleCacheKey : public CacheKey<T> {
    virtual ~LocaleCacheKey() { }
    virtual int32_t hashCode() const override {
        return (int32_t)(37u * (uint32_t)CacheKey<T>::hashCode() + (uint32_t)fLoc.hashCode());
+   }
+   // -fno-rtti type identity distinct from CacheKey<T> (see UnifiedCacheTypeId).
+   virtual const void *typeId() const override {
+       return &UnifiedCacheTypeId<LocaleCacheKey<T> >::value;
    }
    inline bool operator == (const LocaleCacheKey<T> &other) const {
        return fLoc == other.fLoc;

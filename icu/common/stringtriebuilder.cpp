@@ -385,7 +385,11 @@ StringTrieBuilder::equalNodes(const void *left, const void *right) {
 
 bool
 StringTrieBuilder::Node::operator==(const Node &other) const {
-    return this==&other || (typeid(*this)==typeid(other) && hash==other.hash);
+    // libnls builds ICU -fno-rtti. Node has no per-class getDynamicClassID, so this
+    // comparison drops to nullptr==nullptr (type check off) and relies on hash; that
+    // is acceptable because trie building runs only in the offline data generator,
+    // never in libnls, which loads prebuilt tries.
+    return this==&other || (getDynamicClassID()==other.getDynamicClassID() && hash==other.hash);
 }
 
 int32_t

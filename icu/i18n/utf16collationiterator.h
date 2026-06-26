@@ -42,6 +42,8 @@ public:
 
     virtual ~UTF16CollationIterator();
 
+    virtual Kind getKind() const override { return KIND_UTF16; }
+
     virtual bool operator==(const CollationIterator &other) const override;
 
     virtual void resetToOffset(int32_t newOffset) override;
@@ -94,6 +96,8 @@ public:
     FCDUTF16CollationIterator(const FCDUTF16CollationIterator &other, const char16_t *newText);
 
     virtual ~FCDUTF16CollationIterator();
+
+    virtual Kind getKind() const override { return KIND_FCD_UTF16; }
 
     virtual bool operator==(const CollationIterator &other) const override;
 

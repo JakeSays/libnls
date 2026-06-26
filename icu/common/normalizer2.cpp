@@ -344,17 +344,10 @@ unorm2_normalize(const UNormalizer2 *norm2,
     // length==0: Nothing to do, and n2wi->normalize(nullptr, nullptr, buffer, ...) would crash.
     if(length!=0) {
         const Normalizer2 *n2=(const Normalizer2 *)norm2;
-        const Normalizer2WithImpl *n2wi=dynamic_cast<const Normalizer2WithImpl *>(n2);
-        if(n2wi!=nullptr) {
-            // Avoid duplicate argument checking and support NUL-terminated src.
-            ReorderingBuffer buffer(n2wi->impl, destString);
-            if(buffer.init(length, *pErrorCode)) {
-                n2wi->normalize(src, length>=0 ? src+length : nullptr, buffer, *pErrorCode);
-            }
-        } else {
-            UnicodeString srcString(length<0, src, length);
-            n2->normalize(srcString, destString, *pErrorCode);
-        }
+        // -fno-rtti: drop the Normalizer2WithImpl fast path (it needed a dynamic_cast).
+        // The generic Normalizer2 path produces the same result for any implementation.
+        UnicodeString srcString(length<0, src, length);
+        n2->normalize(srcString, destString, *pErrorCode);
     }
     return destString.extract(dest, capacity, *pErrorCode);
 }
@@ -381,29 +374,9 @@ normalizeSecondAndAppend(const UNormalizer2 *norm2,
     // secondLength==0: Nothing to do, and n2wi->normalizeAndAppend(nullptr, nullptr, buffer, ...) would crash.
     if(secondLength!=0) {
         const Normalizer2* n2 = reinterpret_cast<const Normalizer2*>(norm2);
-        const Normalizer2WithImpl* n2wi = dynamic_cast<const Normalizer2WithImpl*>(n2);
-        if(n2wi!=nullptr) {
-            // Avoid duplicate argument checking and support NUL-terminated src.
-            UnicodeString safeMiddle;
-            {
-                ReorderingBuffer buffer(n2wi->impl, firstString);
-                if(buffer.init(firstLength+secondLength+1, *pErrorCode)) {  // destCapacity>=-1
-                    n2wi->normalizeAndAppend(second, secondLength>=0 ? second+secondLength : nullptr,
-                                             doNormalize, safeMiddle, buffer, *pErrorCode);
-                }
-            }  // The ReorderingBuffer destructor finalizes firstString.
-            if(U_FAILURE(*pErrorCode) || firstString.length()>firstCapacity) {
-                // Restore the modified suffix of the first string.
-                // This does not restore first[] array contents between firstLength and firstCapacity.
-                // (That might be uninitialized memory, as far as we know.)
-                if(first!=nullptr) { /* don't dereference nullptr */
-                  safeMiddle.extract(0, 0x7fffffff, first+firstLength-safeMiddle.length());
-                  if(firstLength<firstCapacity) {
-                    first[firstLength]=0;  // NUL-terminate in case it was originally.
-                  }
-                }
-            }
-        } else {
+        // -fno-rtti: drop the Normalizer2WithImpl fast path (it needed a dynamic_cast).
+        // The generic Normalizer2 path produces the same result for any implementation.
+        {
             UnicodeString secondString(secondLength<0, second, secondLength);
             if(doNormalize) {
                 n2->normalizeSecondAndAppend(firstString, secondString, *pErrorCode);

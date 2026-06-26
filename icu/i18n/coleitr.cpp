@@ -357,19 +357,18 @@ const CollationElementIterator& CollationElementIterator::operator=(
         return *this;
     }
 
+    // -fno-rtti: pick the concrete iterator subtype via getKind() instead of dynamic_cast.
     CollationIterator *newIter;
-    const FCDUTF16CollationIterator *otherFCDIter =
-            dynamic_cast<const FCDUTF16CollationIterator *>(other.iter_);
-    if(otherFCDIter != nullptr) {
-        newIter = new FCDUTF16CollationIterator(*otherFCDIter, string_.getBuffer());
+    const CollationIterator::Kind otherKind =
+            (other.iter_ != nullptr) ? other.iter_->getKind() : CollationIterator::KIND_OTHER;
+    if(otherKind == CollationIterator::KIND_FCD_UTF16) {
+        newIter = new FCDUTF16CollationIterator(
+                *static_cast<const FCDUTF16CollationIterator *>(other.iter_), string_.getBuffer());
+    } else if(otherKind == CollationIterator::KIND_UTF16) {
+        newIter = new UTF16CollationIterator(
+                *static_cast<const UTF16CollationIterator *>(other.iter_), string_.getBuffer());
     } else {
-        const UTF16CollationIterator *otherIter =
-                dynamic_cast<const UTF16CollationIterator *>(other.iter_);
-        if(otherIter != nullptr) {
-            newIter = new UTF16CollationIterator(*otherIter, string_.getBuffer());
-        } else {
-            newIter = nullptr;
-        }
+        newIter = nullptr;
     }
     if(newIter != nullptr) {
         delete iter_;

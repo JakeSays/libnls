@@ -115,7 +115,12 @@ set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/EmbeddedNlsData.cpp 
 # icu/CMakeLists.txt) makes U_EXPORT inert, so nothing forces ICU's API back to default visibility.
 # The .so's exported set is unchanged: the version script already localized everything but the 12
 # public functions.
-target_compile_options(icu PRIVATE -fvisibility=hidden)
+# This ICU subset is patched to not use C++ RTTI: typeid/dynamic_cast are replaced with ICU's own
+# getDynamicClassID()/getStaticClassID() and a couple of virtual discriminators (see the
+# -fno-rtti comments in normalizer2/coll/coleitr/serv/*). Build it -fno-rtti to keep that
+# guarantee and to match the ESE build, which compiles the whole project -fno-rtti. ICU's
+# collation subset uses UErrorCode rather than exceptions, so it builds fine under -fno-exceptions.
+target_compile_options(icu PRIVATE -fvisibility=hidden -fno-rtti)
 
 # --- shared product: libnls.so.<version> ----------------------------------------------------
 # Linking icu (OBJECT) folds its objects in alongside the shim objects. Ship a single artifact

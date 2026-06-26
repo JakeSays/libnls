@@ -89,7 +89,9 @@ StringCharacterIterator::operator==(const ForwardCharacterIterator& that) const 
     // because that checks for array pointer equality
     // while we compare UnicodeString objects
 
-    if (typeid(*this) != typeid(that)) {
+    // libnls builds ICU -fno-rtti; ICU's own getDynamicClassID() gives the same
+    // dynamic-type comparison as typeid for these RTTI-bearing classes.
+    if (getDynamicClassID() != that.getDynamicClassID()) {
         return false;
     }
 

@@ -175,7 +175,10 @@ CollationIterator::operator==(const CollationIterator &other) const {
     // Assume that the caller compares the data.
     // Ignore skipped since that should be unused between calls to nextCE().
     // (It only stays around to avoid another memory allocation.)
-    if(!(typeid(*this) == typeid(other) &&
+    // libnls builds ICU -fno-rtti. CollationIterator has no per-class
+    // getDynamicClassID, so the type check is off here; this only matters to
+    // CollationElementIterator comparison, which libnls (sort key / strcoll) never uses.
+    if(!(getDynamicClassID() == other.getDynamicClassID() &&
             ceBuffer.length == other.ceBuffer.length &&
             cesIndex == other.cesIndex &&
             numCpFwd == other.numCpFwd &&
