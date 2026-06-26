@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 #include "NlsData.h"
+#include "EmbeddedNlsData.h"
 #include "IcuDataItem.h"
 #include "LittleEndian.h"
 
@@ -11,58 +12,52 @@
 #include <filesystem>
 #include <fstream>
 
-// Set once by InitializeNls before any NLS API runs, so no guard is needed
-// (the init contract serializes the write against all reads).
-std::string NlsData::_directory;
+// Set once by an InitializeNls* entry point before any NLS API runs, so no guard
+// is needed (the init contract serializes the write against all reads). The
+// default is the baked-in source, so the APIs work even with no InitializeNls.
+bool NlsData::_useDirectory = false;
+std::filesystem::path NlsData::_directory;
 std::vector<uint8_t> NlsData::_codepagesData;
 bool NlsData::_codepagesLoaded = false;
 std::vector<uint8_t> NlsData::_collationData;
 bool NlsData::_collationLoaded = false;
 std::string NlsData::_collationVersion;
 
-void NlsData::Configure(std::string_view directory)
+void NlsData::UseEmbeddedData()
 {
-    _directory.assign(directory);
+    _useDirectory = false;
+    _directory.clear();
 }
 
-const std::string& NlsData::Directory()
+void NlsData::UseDataDirectory(std::string_view directory)
 {
-    return _directory;
+    _useDirectory = true;
+    _directory = std::filesystem::path(directory);
 }
 
-bool NlsData::IsConfigured()
+bool NlsData::ReadFile(std::string_view fileName, std::vector<uint8_t>& bytes)
 {
-    return !_directory.empty();
-}
-
-std::optional<std::vector<uint8_t>> NlsData::ReadFile(std::string_view fileName)
-{
-    if (!IsConfigured())
-    {
-        return std::nullopt;
-    }
-
-    const auto path = std::filesystem::path(_directory) / std::filesystem::path(fileName);
+    const auto path = _directory / std::filesystem::path(fileName);
     std::ifstream stream(path, std::ios::binary);
     if (!stream)
     {
-        return std::nullopt;
+        return false;
     }
 
     stream.seekg(0, std::ios::end);
     const auto end = stream.tellg();
     if (end < 0)
     {
-        return std::nullopt;
+        return false;
     }
     stream.seekg(0, std::ios::beg);
 
-    std::vector<uint8_t> bytes(static_cast<size_t>(end));
+    bytes.resize(end);
     if (!bytes.empty() && !stream.read(reinterpret_cast<char*>(bytes.data()), end))
     {
-        return std::nullopt;
+        return false;
     }
-    return bytes;
+    return true;
 }
 
 std::string NlsData::FindCollationPackage()
@@ -79,28 +74,28 @@ std::string NlsData::FindCollationPackage()
     return {};
 }
 
-std::string NlsData::ExtractPackagePrefix(const std::vector<uint8_t>& data)
+std::string NlsData::ExtractPackagePrefix(const uint8_t* data, size_t size)
 {
     // CmnD layout: MappedData { uint16 headerSize; uint8 0xDA; uint8 0x27 },
     // then the offset ToC at headerSize: uint32 count, then count entries of
     // { uint32 nameOffset; uint32 dataOffset } relative to the ToC base. The
     // first entry's name ("<prefix>/...") gives the package prefix.
-    if (data.size() < 4 || data[2] != 0xDA || data[3] != 0x27)
+    if (size < 4 || data[2] != 0xDA || data[3] != 0x27)
     {
         return {};
     }
-    const uint16_t headerSize = LittleEndian::ReadUInt16(data.data());
-    if (data.size() < static_cast<size_t>(headerSize) + 8)
+    const uint16_t headerSize = LittleEndian::ReadUInt16(data);
+    if (size < static_cast<size_t>(headerSize) + 8)
     {
         return {};
     }
-    const uint8_t* const toc = data.data() + headerSize;
+    const uint8_t* const toc = data + headerSize;
     if (LittleEndian::ReadUInt32(toc) == 0)
     {
         return {};
     }
     const uint32_t nameOffset = LittleEndian::ReadUInt32(toc + 4);
-    if (static_cast<size_t>(headerSize) + nameOffset >= data.size())
+    if (static_cast<size_t>(headerSize) + nameOffset >= size)
     {
         return {};
     }
@@ -119,15 +114,22 @@ bool NlsData::LoadCodepages()
         return true;
     }
 
-    auto bytes = ReadFile("codepages.dat");
-    if (!bytes)
+    const uint8_t* bytes = nullptr;
+    if (_useDirectory)
     {
-        return false;
+        if (!ReadFile("codepages.dat", _codepagesData))
+        {
+            return false;
+        }
+        bytes = _codepagesData.data();
     }
-    _codepagesData = std::move(*bytes);
+    else
+    {
+        bytes = EmbeddedNlsData::Codepages();
+    }
 
     UErrorCode status = U_ZERO_ERROR;
-    udata_setAppData("codepages", _codepagesData.data(), &status);
+    udata_setAppData("codepages", bytes, &status);
     if (U_FAILURE(status))
     {
         _codepagesData.clear();
@@ -145,23 +147,32 @@ bool NlsData::LoadCollation()
         return true;
     }
 
-    const std::string package = FindCollationPackage();
-    if (package.empty())
+    const uint8_t* bytes = nullptr;
+    size_t size = 0;
+    if (_useDirectory)
     {
-        return false;
+        const std::string package = FindCollationPackage();
+        if (package.empty())
+        {
+            return false;
+        }
+        if (!ReadFile(package, _collationData))
+        {
+            return false;
+        }
+        bytes = _collationData.data();
+        size = _collationData.size();
     }
-
-    auto bytes = ReadFile(package);
-    if (!bytes)
+    else
     {
-        return false;
+        bytes = EmbeddedNlsData::Collation();
+        size = EmbeddedNlsData::CollationSize();
     }
-    _collationData = std::move(*bytes);
 
     // The package's ToC entries are prefixed with its own name (read from the
     // package itself, not the file name). Tell ICU's loader to build its common
     // data lookups with that prefix instead of U_ICUDATA_NAME.
-    const std::string prefix = ExtractPackagePrefix(_collationData);
+    const std::string prefix = ExtractPackagePrefix(bytes, size);
     if (prefix.empty())
     {
         _collationData.clear();
@@ -170,7 +181,7 @@ bool NlsData::LoadCollation()
     udata_setICUDataPackage(prefix.c_str());
 
     UErrorCode status = U_ZERO_ERROR;
-    udata_setCommonData(_collationData.data(), &status);
+    udata_setCommonData(bytes, &status);
     if (U_FAILURE(status))
     {
         _collationData.clear();

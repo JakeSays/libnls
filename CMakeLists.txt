@@ -17,16 +17,62 @@ add_subdirectory(data/ucd)
 # Vendored ICU subset (OBJECT lib `icu` with all ICU flags/includes/sources).
 add_subdirectory(icu)
 
+# --- regenerate the baked-in NLS data, then embed it ----------------------------------------
+# The data generator (C# native-AOT) rebuilds both ICU "CmnD" packages from the pinned CLDR/UCD
+# text; src/EmbeddedNlsData.cpp #embeds the result into libnls.so so a default InitializeNls()
+# needs no external files. The command reruns only when the generator or the LCID map changes
+# (a CLDR/UCD bump is a deliberate version edit that invalidates the build dir anyway).
+set(NLS_DATA_GEN
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/NlsDataGenerator/bin/Release/net10.0/nls-data-gen
+    CACHE FILEPATH "nls-data-gen executable that builds the NLS data packages")
+set(NLS_DATA_OUT ${CMAKE_CURRENT_BINARY_DIR}/nlsdata)
+set(NLS_COLLATION_DAT ${NLS_DATA_OUT}/cldr-${CLDR_VERSION}.dat)
+set(NLS_CODEPAGES_DAT ${NLS_DATA_OUT}/codepages.dat)
+
+add_custom_command(
+    OUTPUT ${NLS_COLLATION_DAT} ${NLS_CODEPAGES_DAT}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${NLS_DATA_OUT}
+    COMMAND ${NLS_DATA_GEN}
+        --cldr ${CMAKE_CURRENT_SOURCE_DIR}/data/cldr
+        --ucd ${UCD_DATA_DIR}
+        --out ${NLS_DATA_OUT}
+        --cldr-version ${CLDR_VERSION}
+        --lcidmap ${CMAKE_CURRENT_SOURCE_DIR}/data/lcidmap.txt
+    DEPENDS ${NLS_DATA_GEN} ${CMAKE_CURRENT_SOURCE_DIR}/data/lcidmap.txt
+    COMMENT "Generating NLS data packages (cldr-${CLDR_VERSION}.dat, codepages.dat)"
+    VERBATIM)
+add_custom_target(nls-data DEPENDS ${NLS_COLLATION_DAT} ${NLS_CODEPAGES_DAT})
+
 # --- our Win32 shims over ICU ---------------------------------------------------------------
 # One TU per concern; headers listed alongside so they appear in the project.
-file(GLOB NLS_SHIM_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-file(GLOB NLS_SHIM_HEADERS CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
-
-# icu is an OBJECT library: linking it folds its objects (and propagates its PUBLIC
+# icu is an OBJECT library: linking it (below) folds its objects (and propagates its PUBLIC
 # include dirs + UCONFIG/static defines to our shim TUs) into libnls.so.
-add_library(nls SHARED ${NLS_SHIM_SOURCES} ${NLS_SHIM_HEADERS})
+add_library(nls SHARED
+    src/CodePage.cpp
+    src/CodePageTable.cpp
+    src/Collator.cpp
+    src/CompareString.cpp
+    src/EmbeddedNlsData.cpp
+    src/IcuDataItem.cpp
+    src/InitializeNls.cpp
+    src/LcMapString.cpp
+    src/Locale.cpp
+    src/LocaleTable.cpp
+    src/NlsData.cpp
+    src/NlsVersion.cpp
+    src/StringMapper.cpp
+    src/CodePageTable.h
+    src/Collator.h
+    src/EmbeddedNlsData.h
+    src/IcuDataItem.h
+    src/LittleEndian.h
+    src/LocaleTable.h
+    src/NlsData.h
+    src/StringMapper.h
+    src/Utf.h
+    src/WideString.h
+    src/Win32Types.h
+    include/winnls.h)
 target_link_libraries(nls PRIVATE icu)
 target_include_directories(nls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -50,6 +96,15 @@ target_link_options(nls PRIVATE
     -Wl,--gc-sections
     -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libnls.map)
 
-# TODO(step 5): data-regen target (tools/) — CMake-build genrb/gennorm2/root build, run on
-# pinned FractionalUCA/CLDR text, embed the result (replaces icu/stubdata). Until then there is
-# no usable collation data and ucol_open fails with U_FILE_ACCESS_ERROR.
+# Bind the embed TU to the regenerated packages: --embed-dir resolves the #embed file names,
+# the NLS_EMBEDDED_* macros carry those names (cldr's is version-stamped), and OBJECT_DEPENDS
+# rebuilds the object when either package changes. add_dependencies orders the generator first.
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/EmbeddedNlsData.cpp PROPERTIES
+    OBJECT_DEPENDS "${NLS_COLLATION_DAT};${NLS_CODEPAGES_DAT}"
+    COMPILE_OPTIONS "--embed-dir=${NLS_DATA_OUT}"
+    COMPILE_DEFINITIONS "NLS_EMBEDDED_COLLATION=\"cldr-${CLDR_VERSION}.dat\";NLS_EMBEDDED_CODEPAGES=\"codepages.dat\"")
+add_dependencies(nls nls-data)
+
+# --- tests ----------------------------------------------------------------------------------
+enable_testing()
+add_subdirectory(tests)

@@ -27,10 +27,10 @@
 
 namespace
 {
-    bool IsAnsiCodePage(UINT codePage)
-    {
-        return codePage == 0 || codePage == CP_ACP || codePage == CP_THREAD_ACP || codePage == 1252;
-    }
+bool IsAnsiCodePage(UINT codePage)
+{
+    return codePage == CP_ACP || codePage == CP_THREAD_ACP || codePage == 1252;
+}
 }
 
 extern "C" WINBASEAPI INT WINAPI MultiByteToWideChar(UINT CodePage, DWORD dwFlags,
