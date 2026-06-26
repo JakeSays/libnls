@@ -47,10 +47,15 @@ add_custom_command(
 add_custom_target(nls-data DEPENDS ${NLS_COLLATION_DAT} ${NLS_CODEPAGES_DAT})
 
 # --- our Win32 shims over ICU ---------------------------------------------------------------
-# One TU per concern; headers listed alongside so they appear in the project.
-# icu is an OBJECT library: linking it (below) folds its objects (and propagates its PUBLIC
-# include dirs + UCONFIG/static defines to our shim TUs) into libnls.so.
-add_library(nls SHARED
+# One TU per concern, compiled once into an OBJECT library that both the shared and static products
+# below reuse. The shim TUs are C++23 (Jake's standard); the vendored ICU OBJECT lib stays at the
+# global C++17 it requires. -fshort-wchar makes WCHAR (wchar_t) 16-bit and ABI-compatible with the
+# WCHAR libese hands across <winnls.h>; -fno-builtin-wcs* stops clang's idiom recognizer from
+# folding our 16-bit-WCHAR loops into libc wcs* calls that walk 4-byte wchar_t. -fvisibility=hidden
+# keeps every symbol but the WINBASEAPI-marked public surface internal -- the .so additionally has
+# the version script, but the static archive (where no version script applies) relies on this so
+# libnls.a does not leak the shims' or ICU's symbols into libese.
+add_library(nls-shims OBJECT
     src/CodePage.cpp
     src/CodePageTable.cpp
     src/Collator.cpp
@@ -76,27 +81,51 @@ add_library(nls SHARED
     src/WideString.h
     src/Win32Types.h
     include/winnls.h)
-target_link_libraries(nls PRIVATE icu)
-target_include_directories(nls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-# The shim TUs are C++23 (Jake's standard); the vendored ICU OBJECT lib stays at the global
-# C++17 it requires. -fshort-wchar makes WCHAR (wchar_t) 16-bit and ABI-compatible with the
-# WCHAR libese hands across <winnls.h>; it applies to src/ only (the OBJECT split keeps ICU,
-# which uses char16_t/UChar, clean of it). -fno-builtin-wcs* stops clang's idiom recognizer
-# from folding our 16-bit-WCHAR loops into libc wcs* calls that walk 4-byte wchar_t.
-# SOVERSION stamps the SONAME as libnls.so.<major> (real file libnls.so.1.0.0), so libese binds
-# to the versioned name in its DT_NEEDED, not the unversioned libnls.so dev symlink.
-set_target_properties(nls PROPERTIES
+# PRIVATE icu gives the shims ICU's public include dirs + UCONFIG/static defines to compile against
+# (it does not fold ICU objects in -- the final products link icu for that). PIC so the same
+# objects serve both the .so and a libnls.a linked into a shared libese.
+target_link_libraries(nls-shims PRIVATE icu)
+target_include_directories(nls-shims PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_target_properties(nls-shims PROPERTIES
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED ON
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-    VERSION ${PROJECT_VERSION})
-target_compile_options(nls PRIVATE
+    POSITION_INDEPENDENT_CODE ON)
+target_compile_options(nls-shims PRIVATE
     -fshort-wchar
     -fno-builtin-wcslen
     -fno-builtin-wcscmp
-    -fno-builtin-wcschr)
+    -fno-builtin-wcschr
+    -fvisibility=hidden)
+add_dependencies(nls-shims nls-data)
 
+# Bind the embed TU to the regenerated packages: --embed-dir resolves the #embed file names, the
+# NLS_EMBEDDED_* macros carry those names (cldr's is version-stamped), and OBJECT_DEPENDS rebuilds
+# the object when either package changes. The data is compiled into the shim object once and is
+# carried by both the .so and the .a.
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/EmbeddedNlsData.cpp PROPERTIES
+    OBJECT_DEPENDS "${NLS_COLLATION_DAT};${NLS_CODEPAGES_DAT}"
+    COMPILE_OPTIONS "--embed-dir=${NLS_DATA_OUT}"
+    COMPILE_DEFINITIONS "NLS_EMBEDDED_COLLATION=\"cldr-${CLDR_VERSION}.dat\";NLS_EMBEDDED_CODEPAGES=\"codepages.dat\"")
+
+# ICU is private to libnls in both products. The .so enforces that with the version script; the
+# static archive relies on visibility, so compile ICU hidden too -- U_STATIC_IMPLEMENTATION (set in
+# icu/CMakeLists.txt) makes U_EXPORT inert, so nothing forces ICU's API back to default visibility.
+# The .so's exported set is unchanged: the version script already localized everything but the 12
+# public functions.
+target_compile_options(icu PRIVATE -fvisibility=hidden)
+
+# --- shared product: libnls.so.<version> ----------------------------------------------------
+# Linking icu (OBJECT) folds its objects in alongside the shim objects. Ship a single artifact
+# named libnls.so.<version> with no symlinks: naming the output via a custom suffix (rather than
+# VERSION/SOVERSION, which generate the libnls.so / libnls.so.1 symlink chain) leaves CMake's
+# default SONAME equal to that real file name, so libese records the full libnls.so.1.0.0 in
+# DT_NEEDED and the loader opens exactly that file.
+add_library(nls SHARED $<TARGET_OBJECTS:nls-shims>)
+target_link_libraries(nls PRIVATE icu)
+target_include_directories(nls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_target_properties(nls PROPERTIES
+    LINKER_LANGUAGE CXX
+    SUFFIX ".so.${PROJECT_VERSION}")
 # --gc-sections drops what's unreferenced. We intentionally do NOT pass --no-undefined: libnls
 # imports Get/SetLastError from libese (the host owns the single last-error TLS slot; libese's
 # definitions interpose), so those symbols are unresolved in a standalone libnls.so by design.
@@ -105,14 +134,16 @@ target_link_options(nls PRIVATE
     -Wl,--gc-sections
     -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libnls.map)
 
-# Bind the embed TU to the regenerated packages: --embed-dir resolves the #embed file names,
-# the NLS_EMBEDDED_* macros carry those names (cldr's is version-stamped), and OBJECT_DEPENDS
-# rebuilds the object when either package changes. add_dependencies orders the generator first.
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/EmbeddedNlsData.cpp PROPERTIES
-    OBJECT_DEPENDS "${NLS_COLLATION_DAT};${NLS_CODEPAGES_DAT}"
-    COMPILE_OPTIONS "--embed-dir=${NLS_DATA_OUT}"
-    COMPILE_DEFINITIONS "NLS_EMBEDDED_COLLATION=\"cldr-${CLDR_VERSION}.dat\";NLS_EMBEDDED_CODEPAGES=\"codepages.dat\"")
-add_dependencies(nls nls-data)
+# --- static product: libnls.a ---------------------------------------------------------------
+# The same shim + ICU objects archived together, NLS data embedded, so libese can link libnls.a
+# directly and InitializeNls() needs nothing else on disk. The hidden visibility above keeps the
+# archive from leaking the shims' or ICU's symbols into whatever links it.
+add_library(nls-static STATIC $<TARGET_OBJECTS:nls-shims>)
+target_link_libraries(nls-static PRIVATE icu)
+target_include_directories(nls-static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_target_properties(nls-static PROPERTIES
+    LINKER_LANGUAGE CXX
+    OUTPUT_NAME nls)
 
 # --- tests ----------------------------------------------------------------------------------
 enable_testing()

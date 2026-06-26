@@ -72,7 +72,14 @@ ucol_cloneBinary(const UCollator *coll,
         *status = U_UNSUPPORTED_ERROR;
         return 0;
     }
-    return rbc->cloneBinary(buffer, capacity, *status);
+    // libnls excises RuleBasedCollator::cloneBinary (collator serialization is off
+    // the prebuilt-collation path). This public entry is unreachable here, so fail
+    // gracefully rather than reference the excised method.
+    (void)buffer;
+    (void)capacity;
+    *status = U_UNSUPPORTED_ERROR;
+    return 0;
+    // return rbc->cloneBinary(buffer, capacity, *status);
 }
 
 U_CAPI UCollator* U_EXPORT2

@@ -2208,19 +2208,23 @@ Locale::minimizeSubtags(bool favorScript, UErrorCode& status) {
         return;
     }
 
-    CharString minimizedLocaleID = ulocimp_minimizeSubtags(getName(), favorScript, status);
-
-    if (U_FAILURE(status)) {
-        if (status == U_MEMORY_ALLOCATION_ERROR) {
-            setToBogus();
-        }
-        return;
-    }
-
-    init(minimizedLocaleID.data(), /*canonicalize=*/false);
-    if (isBogus()) {
-        status = U_ILLEGAL_ARGUMENT_ERROR;
-    }
+    // libnls excises ulocimp_minimizeSubtags (likely-subtags minimization is off
+    // the prebuilt-collation path and unreachable here). Leave the locale
+    // unchanged rather than reference the excised minimizer.
+    (void)favorScript;
+    // CharString minimizedLocaleID = ulocimp_minimizeSubtags(getName(), favorScript, status);
+    //
+    // if (U_FAILURE(status)) {
+    //     if (status == U_MEMORY_ALLOCATION_ERROR) {
+    //         setToBogus();
+    //     }
+    //     return;
+    // }
+    //
+    // init(minimizedLocaleID.data(), /*canonicalize=*/false);
+    // if (isBogus()) {
+    //     status = U_ILLEGAL_ARGUMENT_ERROR;
+    // }
 }
 
 void
