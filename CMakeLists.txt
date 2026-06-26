@@ -3,7 +3,10 @@
 # (the `icu` OBJECT library). This file builds libnls.so from our Win32 shims and
 # folds the ICU objects in. See VENDORING.md and the design doc (/p/ese/localization-layer.md).
 cmake_minimum_required(VERSION 3.20)
-project(libnls CXX)
+project(libnls
+    VERSION 1.0.0
+    DESCRIPTION "Win32 NLS surface for Linux over vendored ICU"
+    LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)        # ICU 78 requires C++17
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -81,7 +84,13 @@ target_include_directories(nls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # WCHAR libese hands across <winnls.h>; it applies to src/ only (the OBJECT split keeps ICU,
 # which uses char16_t/UChar, clean of it). -fno-builtin-wcs* stops clang's idiom recognizer
 # from folding our 16-bit-WCHAR loops into libc wcs* calls that walk 4-byte wchar_t.
-set_target_properties(nls PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED ON)
+# SOVERSION stamps the SONAME as libnls.so.<major> (real file libnls.so.1.0.0), so libese binds
+# to the versioned name in its DT_NEEDED, not the unversioned libnls.so dev symlink.
+set_target_properties(nls PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    VERSION ${PROJECT_VERSION})
 target_compile_options(nls PRIVATE
     -fshort-wchar
     -fno-builtin-wcslen
