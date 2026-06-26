@@ -60,6 +60,8 @@ add_library(nls-shims OBJECT
     src/CodePageTable.cpp
     src/Collator.cpp
     src/CompareString.cpp
+    src/DateTimeFormat.cpp
+    src/DateTimeFormatter.cpp
     src/EmbeddedNlsData.cpp
     src/IcuDataItem.cpp
     src/InitializeNls.cpp
@@ -71,6 +73,7 @@ add_library(nls-shims OBJECT
     src/StringMapper.cpp
     src/CodePageTable.h
     src/Collator.h
+    src/DateTimeFormatter.h
     src/EmbeddedNlsData.h
     src/IcuDataItem.h
     src/LittleEndian.h
@@ -121,6 +124,7 @@ target_compile_options(icu PRIVATE -fvisibility=hidden)
 # default SONAME equal to that real file name, so libese records the full libnls.so.1.0.0 in
 # DT_NEEDED and the loader opens exactly that file.
 add_library(nls SHARED $<TARGET_OBJECTS:nls-shims>)
+add_library(nls::nls ALIAS nls)
 target_link_libraries(nls PRIVATE icu)
 target_include_directories(nls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_target_properties(nls PROPERTIES

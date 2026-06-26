@@ -9,6 +9,8 @@ LIBNLS {
         InitializeNls;
         InitializeNlsWithData;
         CompareStringW;
+        GetDateFormatW;
+        GetTimeFormatW;
         GetLocaleInfoW;
         GetLocaleInfoEx;
         GetNLSVersionEx;

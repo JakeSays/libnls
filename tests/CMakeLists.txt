@@ -18,6 +18,7 @@ add_executable(nls-tests
     CompareStringTests.cpp
     LocaleCollationTests.cpp
     LcMapStringTests.cpp
+    DateTimeFormatTests.cpp
     NlsVersionTests.cpp
     EmbeddedDataTests.cpp)
 

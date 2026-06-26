@@ -123,6 +123,26 @@ typedef struct _GUID
 } GUID;
 #endif
 
+// Win32 SYSTEMTIME, consumed by GetDateFormatW / GetTimeFormatW. Layout matches
+// Win32. Win32Types.h is libnls-internal, so this never collides with the host's
+// own SYSTEMTIME (the engine defines its own before including <winnls.h>).
+#ifndef _SYSTEMTIME_DEFINED
+#define _SYSTEMTIME_DEFINED
+typedef struct _SYSTEMTIME
+{
+    WORD wYear;
+    WORD wMonth;
+    WORD wDayOfWeek;
+    WORD wDay;
+    WORD wHour;
+    WORD wMinute;
+    WORD wSecond;
+    WORD wMilliseconds;
+} SYSTEMTIME;
+typedef SYSTEMTIME* PSYSTEMTIME;
+typedef SYSTEMTIME* LPSYSTEMTIME;
+#endif
+
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
